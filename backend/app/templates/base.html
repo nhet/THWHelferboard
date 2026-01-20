@@ -1,0 +1,32 @@
+
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>THEOrganigramm</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <script>
+    let lastKnown = null;
+    async function checkUpdate() {
+      try {
+        const res = await fetch('/last_update');
+        const data = await res.json();
+        if (lastKnown && data.timestamp !== lastKnown) {
+          window.location.href = "/";
+        }
+        lastKnown = data.timestamp;
+      } catch (e) {
+        // ignore errors
+      }
+    }
+    setInterval(checkUpdate, 5000);
+    checkUpdate();
+  </script>
+</body>
+</html>

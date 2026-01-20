@@ -1,0 +1,49 @@
+
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>THEOrganigramm</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main>
+  {% block content %}
+    <header class="site-header">
+      <h1>Helferboard - Admin</h1>
+      <nav>
+        <a href="/">Öffentlich</a>
+        <a href="/admin">Admin</a>
+        <a href="/admin/functions">Funktionen</a>
+        <a href="/admin/helpers">Helfer</a>
+        <a href="/admin/groups">Gruppen</a>
+        <a href="/admin/settings">Einstellungen</a>
+      </nav>
+    </header>
+    {% block admin_content %}{% endblock %}
+  {% endblock %}
+  </main>
+  <script>
+    document.addEventListener('paste', function (e) {
+      const files = e.clipboardData.files;
+      if (files.length > 0) {
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) {
+          fileInput.files = files;
+          const label = fileInput.closest('label');
+          if(label) {
+            let hint = label.querySelector('.paste-hint');
+            if(!hint) {
+              hint = document.createElement('span');
+              hint.className = 'paste-hint';
+              hint.textContent = ' (Bild aus Zwischenablage eingefügt)';
+              label.appendChild(hint);
+            }
+          }
+        }
+      }
+    });
+  </script>
+  </body>
+</html>

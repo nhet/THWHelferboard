@@ -1,0 +1,174 @@
+
+{% extends 'base.html' %}
+{% block content %}
+{% if incognito_level >= 2 %}
+{% if carousel_title %}
+<h1 class="carousel-title">{{ carousel_title }}</h1>
+{% endif %}
+<div class="carousel-container">
+  <div class="carousel{% if carousel_images|length == 1 %} single-image{% endif %}">
+    {% for img in carousel_images %}
+      <img src="{{ url_for('static', path=img.path) }}" alt="Carousel" />
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% if incognito_level < 2 %}
+<div class="public-page">
+  {% for node in tree %}
+    <section class="group-section" style="--indent: {{ node.level }}">
+      <h2 class="group-title">{{ node.group.name }}</h2>
+      <div class="helper-grid">
+        {% for h in node.helpers %}
+          <div class="helper-card">
+            <div class="helper-photo">
+              {% if h.photo_path %}
+                <img src="{{ url_for('static', path=h.photo_path) }}" alt="{{h.first_name}} {{h.last_name}}" />
+              {% else %}
+                <img src="{{ url_for('static', path='placeholder-photo.svg') }}" alt="Platzhalter" />
+              {% endif %}
+            </div>
+            <div class="helper-name fn">
+              {% if incognito_level >= 1 %}
+                {{ h.first_name[0] }}.
+              {% else %}
+                {{ h.first_name }}
+              {% endif %}
+            </div>
+            <div class="helper-name ln">
+              {% if incognito_level >= 1 %}
+                {{ h.last_name[0] }}.
+              {% else %}
+                {{ h.last_name }}
+              {% endif %}
+            </div>
+            <div class="helper-emblem">
+              {% if h.main_function and h.main_function.emblem_svg_path %}
+                <img src="{{ url_for('static', path=h.main_function.emblem_svg_path) }}" alt="Dienststellungskennzeichen-{{ h.main_function.name }}" />
+              {% else %}
+                <span class="no-emblem">–</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+</div>
+{% endif %}
+{% if incognito_level < 2 %}
+<script>
+  // Vertical page scroll
+  let scrollingDown = true;
+  let scrollSpeed = 1; // Pixel pro Schritt
+  let scrollInterval = 50; // ms zwischen Schritten
+
+  function autoScroll() {
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const currentScroll = window.pageYOffset;
+
+    if (scrollingDown) {
+      if (currentScroll < scrollHeight) {
+        window.scrollBy(0, scrollSpeed);
+      } else {
+        scrollingDown = false;
+      }
+    } else {
+      if (currentScroll > 0) {
+        window.scrollBy(0, -scrollSpeed);
+      } else {
+        scrollingDown = true;
+      }
+    }
+  }
+
+  // setInterval(autoScroll, scrollInterval);
+
+  // Horizontal group sliders
+  document.addEventListener('DOMContentLoaded', () => {
+    const scrollableGrids = Array.from(document.querySelectorAll('.helper-grid')).filter(grid => grid.children.length > 9);
+
+    if (scrollableGrids.length > 0) {
+      let scrollingForward = true;
+      let cycleCompleted = false;
+      const hScrollSpeed = 1;
+      const hScrollInterval = 30; // ms
+      const scrollWait = 5000; 
+      let isWaiting = true;
+
+      setTimeout(() => {
+        isWaiting = false;
+      }, scrollWait);
+
+      function synchronizedHorizontalScroll() {
+        if (isWaiting) return;
+
+        if (scrollingForward) {
+          let canStillScroll = false;
+          scrollableGrids.forEach(grid => {
+            // Check if there is space to scroll
+            if (grid.scrollLeft < grid.scrollWidth - grid.clientWidth) {
+              grid.scrollLeft += hScrollSpeed;
+              canStillScroll = true;
+            }
+          });
+          if (!canStillScroll) {
+            scrollingForward = false;
+            isWaiting = true;
+            setTimeout(() => { isWaiting = false; }, scrollWait);
+          }
+        } else { // scrolling back
+          let canStillScroll = false;
+          scrollableGrids.forEach(grid => {
+            if (grid.scrollLeft > 0) {
+              grid.scrollLeft -= hScrollSpeed;
+              canStillScroll = true;
+            }
+          });
+          if (!canStillScroll) {
+            scrollingForward = true;
+            isWaiting = true;
+            setTimeout(() => { isWaiting = false; }, scrollWait);
+
+            if (!cycleCompleted) {
+              const event = new CustomEvent('sliderCycleComplete');
+              window.dispatchEvent(event);
+              cycleCompleted = true;
+            }
+          }
+        }
+      }
+
+      setInterval(synchronizedHorizontalScroll, hScrollInterval);
+    } else {
+        const event = new CustomEvent('noSliders');
+        window.dispatchEvent(event);
+    }
+  });
+</script>
+{% endif %}
+{% if detail_groups %}
+{% set pages_list = ["/"] %}
+{% for g in detail_groups %}
+{% do pages_list.append("/group/" + g.id|string) %}
+{% endfor %}
+<script>
+  const pages = {{ pages_list | tojson | safe }};
+  let currentIndex = 0;
+
+  function switchPage() {
+    if (pages.length > 1){
+      currentIndex = (currentIndex + 1) % pages.length;
+      window.location.href = pages[currentIndex];
+    }
+  }
+
+  window.addEventListener('sliderCycleComplete', () => {
+    setTimeout(switchPage, 5000);
+  });
+  window.addEventListener('noSliders', () => {
+    setTimeout(switchPage, 5000);
+  });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,63 @@
+
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<h2>{% if group %}Gruppe bearbeiten{% else %}Neue Gruppe{% endif %}</h2>
+<form method="post" action="/admin/groups/save">
+  {% if group %}<input type="hidden" name="id" value="{{ group.id }}" />{% endif %}
+  <label>Bezeichnung<br>
+    <input name="name" required value="{{ group.name if group else '' }}" />
+  </label>
+  <label>Übergeordnete Gruppe<br>
+    <select name="parent_id">
+      <option value="">(keine)</option>
+      {% for p in parents %}
+        {% if group and p.id == group.parent_id %}
+          <option value="{{p.id}}" selected>{{ p.name }}</option>
+        {% else %}
+          <option value="{{p.id}}">{{ p.name }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </label>
+  <label>Sortierung<br>
+    <input type="number" name="sort_order" value="{{ group.sort_order if group else 0 }}" />
+  </label>
+  <label>
+    <input class="checkbox" type="checkbox" name="detail_enabled" value="1" {% if group and group.detail_enabled %}checked{% endif %} /> Detailseite aktivieren
+  </label>
+  <label>Beschreibung<br>
+    <textarea id="description" name="description" rows="10">{{ group.description if group else '' }}</textarea>
+  </label>
+  <div class="form-actions">
+    <button class="btn" type="submit">Speichern</button>
+    <a class="btn" href="/admin/groups">Abbrechen</a>
+  </div>
+</form>
+{% if group %}
+<h3>Bilder für Detailseite</h3>
+<form method="post" action="/admin/groups/{{ group.id }}/upload_image" enctype="multipart/form-data">
+  <input type="file" name="images" accept="image/*" multiple />
+  <button class="btn" type="submit">Hochladen</button>
+</form>
+{% for img in group.images %}
+  <div style="display:inline-block; margin:5px;">
+    <img src="{{ url_for('static', path=img.path) }}" alt="Group Image" style="width: 100px;" />
+    <form method="post" action="/admin/groups/{{ group.id }}/delete_image/{{ img.id }}" style="display:inline" onsubmit="return confirm('Bild wirklich löschen?')">
+      <button class="btn danger" type="submit">Löschen</button>
+    </form>
+  </div>
+{% endfor %}
+{% endif %}
+<script src="{{ url_for('static', path='tinymce/js/tinymce/tinymce.min.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    tinymce.init({
+      selector: '#description',
+      height: 300,
+      menubar: false,
+      plugins: 'lists link image code',
+      toolbar: 'bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist | code',
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<h2>Gruppen</h2>
+<p><a class="btn" href="/admin/groups/new">+ Neue Gruppe</a></p>
+<table class="list-table">
+  <thead>
+    <tr><th>ID</th><th>Bezeichnung</th><th>Übergeordnet</th><th>Sortierung</th><th>Detailseite</th><th>Aktionen</th></tr>
+  </thead>
+  <tbody>
+    {% for g in groups %}
+      <tr>
+        <td>{{ g.id }}</td>
+        <td>{{ g.name }}</td>
+        <td>{{ g.parent.name if g.parent else '-' }}</td>
+        <td>{{ g.sort_order }}</td>
+        <td>{{g.detail_enabled}}</td>
+        <td>
+          <a class="btn" href="/admin/groups/{{ g.id }}">Bearbeiten</a>
+          <form method="post" action="/admin/groups/{{ g.id }}/delete" style="display:inline" onsubmit="return confirm('Löschen?')">
+            <button class="btn danger" type="submit">Löschen</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

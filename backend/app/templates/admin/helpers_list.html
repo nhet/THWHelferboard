@@ -1,0 +1,34 @@
+
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<h2>Helfer</h2>
+<p><a class="btn" href="/admin/helpers/new">+ Neuer Helfer</a></p>
+<p>
+  <form method="post" action="/admin/helpers/import_photos" enctype="multipart/form-data">
+    <label for="zip_file">ZIP mit Fotos importieren:</label>
+    <input type="file" name="zip_file" accept=".zip" required>
+    <button class="btn" type="submit">Importieren</button>
+  </form>
+</p>
+<table class="list-table">
+  <thead>
+    <tr><th>ID</th><th>Name</th><th>Gruppe</th><th>Hauptfunktion</th><th>Aktionen</th></tr>
+  </thead>
+  <tbody>
+    {% for h in helpers %}
+      <tr>
+        <td>{{ h.id }}</td>
+        <td>{{ h.first_name }} {{ h.last_name }}</td>
+        <td>{{ h.group.name }}</td>
+        <td>{{ h.main_function.name }}</td>
+        <td>
+          <a class="btn" href="/admin/helpers/{{ h.id }}">Bearbeiten</a>
+          <form method="post" action="/admin/helpers/{{ h.id }}/delete" style="display:inline" onsubmit="return confirm('Löschen?')">
+            <button class="btn danger" type="submit">Löschen</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,30 @@
+
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<h2>Funktionen</h2>
+<p>
+  <a class="btn" href="/admin/functions/new">+ Neue Funktion</a>
+</p>
+<table class="list-table">
+  <thead>
+    <tr><th>#</th><th>Bezeichnung</th><th>Kurz</th><th>Sortierung</th><th>Emblem</th><th>Aktionen</th></tr>
+  </thead>
+  <tbody>
+    {% for f in functions %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ f.name }}</td>
+        <td>{{ f.short_name or '-' }}</td>
+        <td>{{ f.sort_order }}</td>
+        <td>{% if f.emblem_svg_path %}<img src="{{ url_for('static', path=f.emblem_svg_path) }}" style="height:24px"/>{% else %}-{% endif %}</td>
+        <td>
+          <a class="btn" href="/admin/functions/{{ f.id }}">Bearbeiten</a>
+          <form method="post" action="/admin/functions/{{ f.id }}/delete" style="display:inline" onsubmit="return confirm('Löschen?')">
+            <button class="btn danger" type="submit">Löschen</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<h2>Einstellungen</h2>
+<form method="post" action="/admin/settings/save">
+  <table>
+    <tr><th>Einstellung</th><th>Wert</th></tr>
+    <tr>
+      <td>Incognito-Modus</td><td>
+        <select name="incognito_level">
+          <option value="0" {% if incognito_level == 0 %}selected{% endif %}>Aus</option>
+          <option value="1" {% if incognito_level == 1 %}selected{% endif %}>Namen abkürzen</option>
+          <option value="2" {% if incognito_level == 2 %}selected{% endif %}>Bilder-Rondell (keine Helferansicht)</option>
+        </select>
+      </td>    
+    </tr>
+    <tr>
+      <td>Titel für Rondell</td>
+      <td>
+        <input type="text" name="carousel_title" value="{{ carousel_title }}" placeholder="z.B. Willkommen bei Helferboard">
+      </td>
+    </tr>
+  </table>
+  <div class="form-actions">
+    <button class="btn" type="submit">Speichern</button>
+  </div>
+</form>
+
+<h3>Bilder für Rondell</h3>
+<form method="post" action="/admin/settings/upload_carousel" enctype="multipart/form-data">
+  <input type="file" name="image" accept="image/*" required>
+  <button class="btn" type="submit">Hochladen</button>
+</form>
+<ul>
+  {% for img in carousel_images %}
+    <li>
+      <img src="{{ url_for('static', path=img.path) }}" alt="Carousel" style="width: 100px;" />
+      <form method="post" action="/admin/settings/delete_carousel/{{ img.id }}" style="display:inline" onsubmit="return confirm('Bild wirklich löschen?')">
+        <button class="btn danger" type="submit">Löschen</button>
+      </form>
+    </li>
+  {% endfor %}
+</ul>
+
+<h3>Anwendung Update</h3>
+<form method="post" action="/admin/settings/upload_update" enctype="multipart/form-data" onsubmit="return confirm('Sind Sie sicher, dass Sie die Anwendung aktualisieren möchten? Dies überschreibt die aktuellen Dateien.')">
+  <input type="file" name="update_zip" accept=".zip" required>
+  <button class="btn" type="submit">Update hochladen</button>
+</form>
+{% endblock %}

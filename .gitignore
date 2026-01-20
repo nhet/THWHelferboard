@@ -1,0 +1,70 @@
+app.db
+backend/app/static/
+backend/app/__pycache__/
+build
+*.zip
+
+
+# =========================
+# Python Bytecode / Cache
+# =========================
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+
+# =========================
+# Virtual Environments
+# =========================
+venv/
+.venv/
+env/
+
+# =========================
+# Distribution / Packaging
+# =========================
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Logs / Temp
+# =========================
+*.log
+*.tmp
+*.bak
+
+# =========================
+# OS-specific files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Sensitive / Config
+# =========================
+.env
+config.ini
+secrets.json
+
+# =========================
+# Optional: Python Test / Coverage
+# =========================
+htmlcov/
+.coverage
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover

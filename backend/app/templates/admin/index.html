@@ -1,0 +1,16 @@
+
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<h2>Helferboard v{{ version }}</h2>
+<ul>
+  <li>Gruppen: {{ counts.groups }}</li>
+  <li>Funktionen: {{ counts.functions }}</li>
+  <li>Helfer: {{ counts.helpers }}</li>
+</ul>
+<div class="admin-nav">
+  <a class="btn" href="/admin/functions">Funktionen</a>
+  <a class="btn" href="/admin/helpers">Helfer</a>
+  <a class="btn" href="/admin/groups">Gruppen</a>
+  <a class="btn" href="/admin/settings">Einstellungen</a>
+</div>
+{% endblock %}

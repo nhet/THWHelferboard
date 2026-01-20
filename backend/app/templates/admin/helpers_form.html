@@ -1,0 +1,65 @@
+
+{% extends 'admin/base.html' %}
+{% block admin_content %}
+<h2>{% if helper %}Helfer bearbeiten{% else %}Neuer Helfer{% endif %}</h2>
+<form method="post" action="/admin/helpers/save" enctype="multipart/form-data">
+  {% if helper %}
+    <input type="hidden" name="id" value="{{ helper.id }}" />
+  {% endif %}
+  <label>Vorname<br>
+    <input name="first_name" required value="{{ helper.first_name if helper else '' }}" />
+  </label>
+  <label>Nachname<br>
+    <input name="last_name" required value="{{ helper.last_name if helper else '' }}" />
+  </label>
+  <label>Gruppe<br>
+    <select name="group_id" required>
+      {% for g in groups %}
+        <option value="{{g.id}}" {% if helper and helper.group_id == g.id %}selected{% endif %}>{{ g.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Hauptfunktion<br>
+    <select name="main_function_id" required>
+      {% for f in functions %}
+        <option value="{{f.id}}" {% if helper and helper.main_function_id == f.id %}selected{% endif %}>{{ f.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Nebenfunktionen (Mehrfachauswahl; STRG/CMD halten)<br>
+    <select id="secondary" multiple size="6">
+      {% for f in functions %}
+        <option value="{{f.id}}" {% if helper and f in helper.secondary_functions %}selected{% endif %}>{{ f.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+    <label>Foto<br>
+    <input type="file" name="photo" accept="image/*" />
+  </label>
+  <input type="hidden" name="secondary_function_ids" id="secondary_function_ids" value="{{ sec_ids if sec_ids else '' }}" />
+  <script>
+    const sel = document.getElementById('secondary');
+    const hidden = document.getElementById('secondary_function_ids');
+    function updateHidden(){
+      const vals = Array.from(sel.selectedOptions).map(o => o.value);
+      hidden.value = vals.join(',');
+    }
+    sel.addEventListener('change', updateHidden);
+    updateHidden();
+  </script>
+    <div class="form-actions">
+    <button class="btn" type="submit">Speichern</button>
+    <a class="btn" href="/admin/helpers">Abbrechen</a>
+  </div>
+</form>
+
+  {% if helper and helper.photo_path %}
+    <p>Aktuelles Foto:<br>
+      <img src="{{ url_for('static', path=helper.photo_path) }}" style="height:120px;border-radius:8px"/>
+      <form method="post" action="/admin/helpers/{{ helper.id }}/delete_photo" style="display:inline" onsubmit="return confirm('Bild wirklich löschen?')">
+        <button class="btn danger" type="submit">Löschen</button>
+      </form>
+    </p>
+  {% endif %}
+
+{% endblock %}
