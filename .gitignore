@@ -1,5 +1,5 @@
 app.db
-
+backend/app/static/
 backend/app/__pycache__/
 build
 *.zip
