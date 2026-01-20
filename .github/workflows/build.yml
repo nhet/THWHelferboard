@@ -20,11 +20,7 @@ jobs:
         run: |
           mkdir -p build/helferboard
           mkdir -p build/scripts
-
-      - name: Dependencies installieren
-        run: |
-          pip install -r backend/requirements.txt -t build/
-
+          
       - name: Code kopieren
         run: |
           cp -r backend/ build/helferboard/
@@ -36,12 +32,7 @@ jobs:
         run: |
           chmod +x build/scripts/start.sh
 
-      - name: ZIP erzeugen
-        run: |
-          cd build
-          zip -r ../helferboard.zip .
-
       - uses: actions/upload-artifact@v4
         with:
           name: helferboard
-          path: helferboard.zip
+          path: build/
