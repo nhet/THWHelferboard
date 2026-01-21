@@ -23,7 +23,7 @@ jobs:
       
       - name: Dependencies installieren
         run: |
-          pip install -r backend/requirements.txt -t build/backend/app/.venv/lib/site-packages/
+          pip install -r backend/requirements.txt -t build/backend/app/.venv/lib/site-packages
           
       - name: Code kopieren
         run: |
