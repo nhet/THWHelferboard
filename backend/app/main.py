@@ -1,6 +1,8 @@
-
+import subprocess
 from datetime import datetime
 import os
+import asyncio
+import sys
 from typing import Optional, List
 import zipfile
 import shutil
@@ -243,11 +245,9 @@ async def upload_update(update_zip: UploadFile = File(...), db: Session = Depend
         with zip_path.open("wb") as f:
             f.write(await update_zip.read())
 
-        # Extrahiere ZIP
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(temp_dir)
 
-        # Kopiere Dateien in das Projektverzeichnis, überschreibe vorhandene
         extracted_dir = Path(temp_dir)
         for item in extracted_dir.rglob('*'):
             if item.is_file():
@@ -256,7 +256,56 @@ async def upload_update(update_zip: UploadFile = File(...), db: Session = Depend
                 target_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(item, target_path)
 
+    try:
+        if Path(temp_dir) / "update.zip".exists():
+            Path(temp_dir).joinpath("update.zip").unlink()  
+    except:
+        pass
+
+    if "_lite" in update_zip.filename.lower():
+        install_requirements(backend_dir=str(project_root / "backend"), req_file="requirements.txt", timeout=300);
+
+    backend_dir = BASE_DIR.parent
+    asyncio.create_task(restart_backend(backend_dir))
+        
+    set_last_update(db)
+    db.commit()
+
     return RedirectResponse(url="/admin/settings", status_code=HTTP_303_SEE_OTHER)
+
+def restart_backend(backend_dir):
+        import time
+        time.sleep(2)
+        os.execv(sys.executable, ['python'] + [str(backend_dir / "app" / "main.py")])   
+
+def install_requirements(backend_dir="/backend", req_file="requirements.txt", timeout=None):
+    backend_path = Path(backend_dir)
+    req_path = backend_path / req_file
+
+    if not req_path.exists():
+        raise FileNotFoundError(f"Requirements-Datei nicht gefunden: {req_path}")
+
+    print(f"Installiere Dependencies aus {req_path} …")
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-r", str(req_path)],
+            cwd=str(backend_path),          
+            check=True,                     
+            text=True,                      
+            capture_output=True,            
+            timeout=timeout                 
+        )
+        print(result.stdout)
+        print("✅ Installation abgeschlossen.")
+    except subprocess.CalledProcessError as e:
+        print("❌ Installation fehlgeschlagen.")
+        print("STDOUT:\n", e.stdout)
+        print("STDERR:\n", e.stderr)
+        raise
+    except subprocess.TimeoutExpired as e:
+        print(f"⏱️ Timeout nach {timeout} Sekunden.")
+        raise
+
 
 @app.post("/admin/groups/{group_id}/upload_image")
 async def upload_group_image(group_id: int, images: List[UploadFile] = File(...), db: Session = Depends(get_db)):

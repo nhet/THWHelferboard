@@ -1,4 +1,4 @@
-name: Build ZIP
+name: Build lite ZIP
 
 on:
   push:
@@ -33,5 +33,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: helferboard
+          name: helferboard_lite
           path: build/

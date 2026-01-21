@@ -1,0 +1,41 @@
+name: Build full ZIP
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build-Verzeichnis vorbereiten
+        run: |
+          mkdir -p build/scripts
+      
+      - name: Dependencies installieren
+        run: |
+          pip install -r backend/requirements.txt -t build/
+          
+      - name: Code kopieren
+        run: |
+          cp -r backend/ build/
+          cp scripts/start.sh build/scripts/
+          cp scripts/helferboard.service build/scripts/
+          cp scripts/deploy.sh build/scripts/
+
+      - name: Rechte setzen
+        run: |
+          chmod +x build/scripts/start.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: helferboard_full
+          path: build/
