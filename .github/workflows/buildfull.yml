@@ -32,6 +32,8 @@ jobs:
           cp scripts/start.sh build/scripts/
           cp scripts/helferboard.service build/scripts/
           cp scripts/deploy.sh build/scripts/
+          cp -r build/requirements/* build/backend/app/.venv/lib/site-packages/
+          rm -r build/requirements
 
       - name: Rechte setzen
         run: |
