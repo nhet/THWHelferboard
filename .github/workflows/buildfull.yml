@@ -19,10 +19,11 @@ jobs:
       - name: Build-Verzeichnis vorbereiten
         run: |
           mkdir -p build/scripts
+          mkdir -p build/app/.venv/lib/site-packages
       
       - name: Dependencies installieren
         run: |
-          pip install -r backend/requirements.txt -t build/
+          pip install -r backend/requirements.txt -t build/app/.venv/lib/site-packages/
           
       - name: Code kopieren
         run: |
