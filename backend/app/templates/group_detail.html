@@ -6,8 +6,12 @@
   <div class="carousel-container-detail">
     <div class="carousel-detail {% if images|length == 1 %}single-image-detail{% endif %}">
       {% for img in images %}
-        <img src="{{ url_for('static', path=img.path) }}" alt="Carousel" />
+        <div class="carousel-item">
+          <img class="bg" src="{{ url_for('static', path=img.path) }}" alt="">
+          <img class="fg" src="{{ url_for('static', path=img.path) }}" alt="">
+        </div>
       {% endfor %}
+
     </div>
   </div>
  {% endif %}
