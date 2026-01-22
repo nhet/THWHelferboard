@@ -2,16 +2,28 @@
 {% extends 'base.html' %}
 {% block content %}
 {% if incognito_level >= 2 %}
-{% if carousel_title %}
-<h1 class="carousel-title">{{ carousel_title }}</h1>
-{% endif %}
-<div class="carousel-container">
-  <div class="carousel{% if carousel_images|length == 1 %} single-image{% endif %}">
-    {% for img in carousel_images %}
-      <img src="{{ url_for('static', path=img.path) }}" alt="Carousel" />
-    {% endfor %}
-  </div>
-</div>
+  {% if carousel_title %}
+  <h1 class="carousel-title">{{ carousel_title }}</h1>
+  {% endif %}
+
+  {% if carousel_images %}
+      <div class="carousel-container-large">
+        <div class="carousel-large {% if carousel_images|length == 1 %}single-image{% endif %}">
+          {% set total = carousel_images|length %}
+          {% for img in carousel_images %}
+            <div class="carousel-item-large"
+              {% if total > 1 %}
+                style="--total-slides: {{ total }}; animation-delay: {{ loop.index0 * 4 }}s;"
+              {% endif %}>
+              <img class="bg" src="{{ url_for('static', path=img.path) }}" alt="">
+              <img class="fg" src="{{ url_for('static', path=img.path) }}" alt="">
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+ {% endif %}
+
+
 {% endif %}
 {% if incognito_level < 2 %}
 <div class="public-page">

@@ -34,12 +34,6 @@ input, select { padding: 6px 8px; border-radius: 6px; border:1px solid #334; bac
 .helper-emblem { margin-top: auto; }
 .helper-emblem img { height: 28px; }
 .no-emblem { opacity: 0.5; }
-.carousel-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg); }
-.carousel { display: flex; overflow: hidden; width: 80%; max-width: 1000px; height: 400px; position: relative; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-.carousel img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; animation: slide 10s infinite; }
-.carousel.single-image img { animation: none; }
-@keyframes slide { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-100%); } }
-.carousel-title { text-align: center; font-size: 2rem; margin: 20px 0; color: var(--fg); }
 .group-detail_detail { max-width: 1080px; margin: 0 auto; padding: 20px; }
 .group-description_detail { margin: 20px 0; font-size: 1.1rem; line-height: 1.6; }
 .group-images_detail { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
@@ -55,9 +49,137 @@ input, select { padding: 6px 8px; border-radius: 6px; border:1px solid #334; bac
 .helper-card_detail .helper-functions_detail { font-size: 0.9rem; color: #555; }
 .helper-card_detail .main-function_detail { font-weight: bold; }
 
-.carousel-container-detail { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
-.carousel-detail { display: flex; overflow: hidden; width: 100%; max-width: 1000px; height: 250px; position: relative; border-radius: 10px;}
-.carousel-item { position: relative; width: 100%; height: 100%; flex-shrink: 0; overflow: hidden; animation: slide 10s infinite;}
-.carousel-item img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(20px); transform: scale(1.1); opacity: 0.8;}
-.carousel-item img.fg { position: relative; width: 100%; height: 100%; object-fit: contain; z-index: 1;}
-.carousel-detail.single-image-detail .carousel-item { animation: none; }
+
+.carousel-container-detail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.carousel-detail {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+/* Items übereinander stapeln */
+.carousel-item {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+/* Nur Fade-Animation wenn mehr als 1 Bild */
+.carousel-detail:not(.single-image-detail) .carousel-item {
+  animation-name: fade;
+  animation-duration: calc(var(--total-slides) * 4s); /* 4s pro Bild */
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.carousel-item img.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(20px);
+  transform: scale(1.1);
+  opacity: 0.8;
+}
+
+.carousel-item img.fg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+/* Fade Keyframes */
+@keyframes fade {
+  0%, 20% { opacity: 1; }
+  25%, 100% { opacity: 0; }
+}
+
+/* Statisch, wenn nur ein Bild */
+.carousel-detail.single-image-detail .carousel-item {
+  opacity: 1;
+  animation: none;
+}
+
+/*Für die Startseite eine Überschrift*/
+.carousel-title { text-align: center; font-size: 2rem; margin: 20px 0; color: var(--fg); }
+
+/* Container */
+.carousel-container-large {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* Slider */
+.carousel-large {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  height: 1600px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+/* Slides übereinander */
+.carousel-item-large {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+/* Fade nur bei mehreren Bildern */
+.carousel-large:not(.single-image) .carousel-item-large {
+  animation-name: fade-large;
+  animation-duration: calc(var(--total-slides) * 4s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Blur-Hintergrund */
+.carousel-item-large img.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(28px);
+  transform: scale(1.15);
+  opacity: 0.75;
+}
+
+/* Vordergrundbild */
+.carousel-item-large img.fg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+/* Ein Bild → statisch */
+.carousel-large.single-image .carousel-item-large {
+  opacity: 1;
+  animation: none;
+}
+
+/* Fade-Animation */
+@keyframes fade-large {
+  0%, 20% { opacity: 1; }
+  25%, 100% { opacity: 0; }
+}
