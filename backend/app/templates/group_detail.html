@@ -26,9 +26,11 @@
   <div class="group-helpers_detail">
       {% for function, helpers in helpers_by_function %}
       <div class="function-group_detail">
-          <h3>{{ function.name }} {% if function and function.emblem_svg_path %}
-                <img height="30px"  src="{{ url_for('static', path=function.emblem_svg_path) }}" alt="Dienststellungskennzeichen-{{ function.name }}" />
-              {% endif %}</h3>
+          <h3>{{ function.name }}
+            {% if function and function.emblem_svg_path %}
+              <img height="30px"  src="{{ url_for('static', path=function.emblem_svg_path) }}" alt="Dienststellungskennzeichen-{{ function.name }}" />
+            {% endif %}
+          </h3>
           <div class="helpers-row_detail">
               {% for helper in helpers %}
               <div class="helper-card_detail">
@@ -72,34 +74,33 @@
     window.location.href = pages[currentIndex];
   }
 
-  setInterval(switchPage, 10000); // 10 Sekunden
+  setInterval(switchPage, 30000);
 </script>
 
 <script>
+  const helpersDiv = document.querySelector('.group-helpers_detail');
   let scrollingDown = true;
-  let scrollSpeed = 1; // Pixel pro Schritt
-  let scrollInterval = 50; // ms zwischen Schritten
 
-  function autoScroll() {
-    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const currentScroll = window.pageYOffset;
+  function autoScrollHelpers() {
+  const scrollHeight = helpersDiv.scrollHeight - helpersDiv.clientHeight;
+  const currentScroll = helpersDiv.scrollTop;
 
-    if (scrollingDown) {
-      if (currentScroll < scrollHeight) {
-        window.scrollBy(0, scrollSpeed);
-      } else {
-        scrollingDown = false;
-      }
-    } else {
-      if (currentScroll > 0) {
-        window.scrollBy(0, -scrollSpeed);
-      } else {
-        scrollingDown = true;
-      }
-    }
+  if (scrollingDown) {
+  if (currentScroll < scrollHeight) {
+  helpersDiv.scrollBy(0, 1);
+  } else {
+  scrollingDown = false;
   }
+  } else {
+  if (currentScroll > 0) {
+  helpersDiv.scrollBy(0, -1);
+  } else {
+  scrollingDown = true;
+  }
+  }
+}
 
-  setInterval(autoScroll, scrollInterval);
+setInterval(autoScrollHelpers, 50);
 </script>
 
 {% endif %}
