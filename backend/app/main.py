@@ -17,12 +17,12 @@ from sqlalchemy.orm import joinedload
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import HTTP_303_SEE_OTHER
-from sqlalchemy import text
+from sqlalchemy import text, exists
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func as sa_func
 
 from .database import Base, engine, get_db
-from .models import Group, Function, Helper, Setting, CarouselImage, GroupImage
+from .models import Group, Function, Helper, Setting, CarouselImage, GroupImage, helper_secondary_functions
 from .version import __version__
 app = FastAPI(title="Helferboard")
 
@@ -116,6 +116,27 @@ def save_upload(upload: Optional[UploadFile], subdir: str) -> Optional[str]:
         f.write(upload.file.read())
     return f"{subdir}/{fname}"
 
+def get_used_functions(db: Session) -> List[Function]:
+    """
+    Returns a list of Function objects that are actually used by helpers (as main or secondary functions),
+    filtered by sort_order > 0, and sorted ascending by sort_order.
+    """
+    # Subquery for functions used as main functions
+    main_subquery = db.query(Function.id).join(Helper, Helper.main_function_id == Function.id).subquery()
+
+    # Subquery for functions used as secondary functions
+    secondary_subquery = db.query(helper_secondary_functions.c.function_id).subquery()
+
+    # Combine and filter
+    used_function_ids = db.query(Function.id).filter(
+        (Function.id.in_(main_subquery)) | (Function.id.in_(secondary_subquery))
+    ).filter(Function.sort_order > 0).subquery()
+
+    # Get the functions, sorted by sort_order ascending
+    functions = db.query(Function).filter(Function.id.in_(used_function_ids)).order_by(Function.sort_order.asc()).all()
+
+    return functions
+
 # ---------- Public ----------
 @app.get("/", response_class=HTMLResponse)
 def public_index(request: Request, db: Session = Depends(get_db)):
@@ -144,7 +165,8 @@ def public_index(request: Request, db: Session = Depends(get_db)):
     tree = build(None, 0)
     # Gruppen mit Detailseiten
     detail_groups = db.query(Group).filter(Group.detail_enabled == 1).order_by(Group.sort_order.asc()).all()
-    return templates.TemplateResponse("public_index.html", {"request": request, "tree": tree, "incognito_level": incognito_level, "carousel_title": carousel_title, "carousel_images": carousel_images, "detail_groups": detail_groups})
+    allFunctionsInUse = get_used_functions(db)
+    return templates.TemplateResponse("public_index.html", {"request": request, "tree": tree, "incognito_level": incognito_level, "carousel_title": carousel_title, "carousel_images": carousel_images, "detail_groups": detail_groups, "allFunctionsInUse": allFunctionsInUse})
 
 @app.get("/group/{group_id}", response_class=HTMLResponse)
 def group_detail(group_id: int, request: Request, db: Session = Depends(get_db)):
@@ -436,6 +458,7 @@ async def function_save(
     id: Optional[int] = Form(None),
     name: str = Form(...),
     short_name: Optional[str] = Form(None),
+    legend_name: Optional[str] = Form(None),
     sort_order: int = Form(0),
     delete_emblem: Optional[str] = Form(None),
     emblem: Optional[UploadFile] = File(None),
@@ -457,6 +480,7 @@ async def function_save(
         if not f: raise HTTPException(404)
         f.name = name
         f.short_name = short_name
+        f.legend_name = legend_name
         f.sort_order = sort_order
         if emblem_path is not None:
             f.emblem_svg_path = emblem_path
@@ -465,7 +489,7 @@ async def function_save(
     else:
         max_sort = db.query(sa_func.max(Function.sort_order)).scalar() or 0
         sort_order = max_sort + 10
-        f = Function(name=name, short_name=short_name, sort_order=sort_order, emblem_svg_path=emblem_path)
+        f = Function(name=name, short_name=short_name, legend_name=legend_name, sort_order=sort_order, emblem_svg_path=emblem_path)
         db.add(f)
         
     set_last_update(db)

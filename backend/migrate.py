@@ -22,6 +22,13 @@ with engine.connect() as conn:
     except Exception as e:
         print(f"description already exists or error: {e}")
 
+    # legend_name hinzufügen
+    try:
+        conn.execute(text("ALTER TABLE functions ADD COLUMN legend_name TEXT"))
+        print("Added legend_name to functions")
+    except Exception as e:
+        print(f"legend_name already exists or error: {e}")
+
 # Neue Tabelle group_images erstellen
 Base.metadata.create_all(bind=engine)
 print("Created tables if not exist")

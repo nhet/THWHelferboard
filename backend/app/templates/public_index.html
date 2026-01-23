@@ -26,6 +26,19 @@
 
 {% endif %}
 {% if incognito_level < 2 %}
+<div class="legende">
+  <span class="legend-title">Legende:</span>
+  {% for func in allFunctionsInUse %}
+    {% if func.emblem_svg_path %}
+      <div class="legend-item">
+        <img height="25px"
+             src="{{ url_for('static', path=func.emblem_svg_path) }}"
+             alt="Dienststellungskennzeichen-{{ func.short_name }}">
+        <span class="legend-text">{{ func.legend_name }}</span>
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>
 <div class="public-page">
   {% for node in tree %}
     <section class="group-section" style="--indent: {{ node.level }}">

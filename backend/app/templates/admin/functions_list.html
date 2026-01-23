@@ -7,7 +7,7 @@
 </p>
 <table class="list-table">
   <thead>
-    <tr><th>#</th><th>Bezeichnung</th><th>Kurz</th><th>Sortierung</th><th>Emblem</th><th>Aktionen</th></tr>
+    <tr><th>#</th><th>Bezeichnung</th><th>Kurz</th><th>Legendenbezeichnung</th><th>Sortierung</th><th>Emblem</th><th>Aktionen</th></tr>
   </thead>
   <tbody>
     {% for f in functions %}
@@ -15,6 +15,7 @@
         <td>{{ loop.index }}</td>
         <td>{{ f.name }}</td>
         <td>{{ f.short_name or '-' }}</td>
+        <td>{{ f.legend_name or '-' }}</td>
         <td>{{ f.sort_order }}</td>
         <td>{% if f.emblem_svg_path %}<img src="{{ url_for('static', path=f.emblem_svg_path) }}" style="height:24px"/>{% else %}-{% endif %}</td>
         <td>

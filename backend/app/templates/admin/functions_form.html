@@ -10,6 +10,9 @@
   <label>Kurzbezeichnung<br>
     <input name="short_name" value="{{ func.short_name if func else '' }}" />
   </label>
+  <label>Legendenbezeichnung<br>
+    <input name="legend_name" value="{{ func.legend_name if func else '' }}" />
+  </label>
   <label>Sortierung<br>
     <input type="number" name="sort_order" value="{{ func.sort_order if func else 0 }}" />
   </label>

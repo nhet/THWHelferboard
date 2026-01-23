@@ -28,6 +28,7 @@ class Function(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, unique=True)
     short_name = Column(String, nullable=True)
+    legend_name = Column(String, nullable=True)
     emblem_svg_path = Column(String, nullable=True)
     sort_order = Column(Integer, default=0, nullable=True)
 

@@ -183,3 +183,44 @@ input, select { padding: 6px 8px; border-radius: 6px; border:1px solid #334; bac
   0%, 20% { opacity: 1; }
   25%, 100% { opacity: 0; }
 }
+
+.legende {
+  position: absolute;
+  top: 0;
+  left: 250px;
+
+  width: 820px;
+  height: 253px;
+
+  display: grid;
+
+  /* 4 Items untereinander */
+  grid-template-rows: repeat(5, min-content);
+
+  /* max. 5 Spalten */
+  grid-template-columns: repeat(5, 1fr);
+
+  gap: 8px 20px;
+
+  padding: 10px;
+  box-sizing: border-box;
+
+  border: #e76f51 2px solid;
+  border-radius: 10px;
+
+  overflow: hidden; /* nichts läuft raus */
+}
+.legend-item {
+  display: flex;
+  flex-direction: column;   /* Bild oben, Text unten */
+  align-items: center;      /* horizontal zentrieren */
+  text-align: center;
+
+  gap: 4px;                 /* Abstand Bild ↔ Text */
+}
+
+.legend-title {
+  grid-column: 1 / -1;   /* spannt über alle Grid-Spalten */
+  font-weight: bold;
+  margin-bottom: 6px;
+}
