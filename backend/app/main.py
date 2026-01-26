@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Depends, Form, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import itertools
 from sqlalchemy.orm import joinedload
@@ -138,6 +138,10 @@ def get_used_functions(db: Session) -> List[Function]:
     return functions
 
 # ---------- Public ----------
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(static_dir / "favicon.ico")
+
 @app.get("/", response_class=HTMLResponse)
 def public_index(request: Request, db: Session = Depends(get_db)):
     incognito_level = get_incognito_level(db)
