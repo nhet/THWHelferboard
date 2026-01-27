@@ -2,9 +2,14 @@
 {% extends 'admin/base.html' %}
 {% block admin_content %}
 <h2>Funktionen</h2>
-<p>
+<div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
   <a class="btn" href="/admin/functions/new">+ Neue Funktion</a>
-</p>
+  <form action="/admin/functions/import" method="post" enctype="multipart/form-data" onsubmit="return confirm('Bestehende Funktionen mit gleicher ID werden überschrieben. Fortfahren?')">
+    <label for="csv_file">CSV-Import (id,Bezeichnung):</label>
+    <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+    <button type="submit" class="btn">Importieren</button>
+  </form>
+</div>
 <table class="list-table">
   <thead>
     <tr><th>#</th><th>Bezeichnung</th><th>Kurz</th><th>Legendenbezeichnung</th><th>Sortierung</th><th>Emblem</th><th>Aktionen</th></tr>
@@ -12,7 +17,7 @@
   <tbody>
     {% for f in functions %}
       <tr>
-        <td>{{ loop.index }}</td>
+        <td>{{ f.id }}</td>
         <td>{{ f.name }}</td>
         <td>{{ f.short_name or '-' }}</td>
         <td>{{ f.legend_name or '-' }}</td>

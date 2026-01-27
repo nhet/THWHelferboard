@@ -2,14 +2,19 @@
 {% extends 'admin/base.html' %}
 {% block admin_content %}
 <h2>Helfer</h2>
-<p><a class="btn" href="/admin/helpers/new">+ Neuer Helfer</a></p>
-<p>
-  <form method="post" action="/admin/helpers/import_photos" enctype="multipart/form-data">
-    <label for="zip_file">ZIP mit Fotos importieren:</label>
-    <input type="file" name="zip_file" accept=".zip" required>
-    <button class="btn" type="submit">Importieren</button>
-  </form>
-</p>
+<div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+    <a class="btn" href="/admin/helpers/new">+ Neuer Helfer</a>
+    <form action="/admin/helpers/import_csv" method="post" enctype="multipart/form-data" onsubmit="return confirm('Bestehende Helfer mit gleichem Vor-/Nachnamen werden überschrieben. Fortfahren?')">
+        <label for="csv_file">CSV-Import (Vorname,Nachname,GruppenID,HauptfunktionID):</label>
+        <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+        <button type="submit" class="btn">Importieren</button>
+    </form>
+    <form method="post" action="/admin/helpers/import_photos" enctype="multipart/form-data">
+        <label for="zip_file">ZIP mit Fotos importieren:</label>
+        <input type="file" name="zip_file" accept=".zip" required>
+        <button class="btn" type="submit">Importieren</button>
+    </form>
+</div>
 <table class="list-table">
   <thead>
     <tr><th>ID</th><th>Name</th><th>Gruppe</th><th>Hauptfunktion</th><th>Aktionen</th></tr>

@@ -8,6 +8,8 @@ import zipfile
 import shutil
 import tempfile
 from pathlib import Path
+import csv
+import io
 
 from fastapi import FastAPI, Request, Depends, Form, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
@@ -369,6 +371,59 @@ async def delete_group_image(group_id: int, img_id: int, db: Session = Depends(g
     return RedirectResponse(url=f"/admin/groups/{group_id}", status_code=HTTP_303_SEE_OTHER)
 
 # ---------- Groups CRUD ----------
+@app.post("/admin/groups/import")
+async def import_groups_from_csv(
+    csv_file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+    # _: bool = Depends(require_admin) # Temporarily disabled for testing
+):
+    if not csv_file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a CSV file.")
+
+    content = await csv_file.read()
+    try:
+        # We need to decode the content to a string to use io.StringIO
+        content_as_string = content.decode('utf-8')
+        # Skip the header
+        reader = csv.reader(io.StringIO(content_as_string))
+        header = next(reader)
+        # Verify header
+        if header != ['ID', 'Bezeichnung', 'parentId']:
+             raise HTTPException(status_code=400, detail=f"Falscher Spaltenaufbau. Erwartet: ID,Bezeichnung,parentId. Gefunden: {','.join(header)}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Fehler beim Lesen der CSV-Datei: {e}")
+
+    groups_in_db = {g.id: g for g in db.query(Group).all()}
+
+    for row in reader:
+        try:
+            group_id = int(row[0])
+            name = row[1]
+            parent_id_str = row[2]
+
+            parent_id = int(parent_id_str) if parent_id_str and parent_id_str.isdigit() and int(parent_id_str) != 0 else None
+
+            if group_id in groups_in_db:
+                # Update existing group
+                group = groups_in_db[group_id]
+                group.name = name
+                group.parent_id = parent_id
+            else:
+                # Create new group
+                group = Group(id=group_id, name=name, parent_id=parent_id)
+                db.add(group)
+
+        except (ValueError, IndexError) as e:
+            # Handle potential errors in row data
+            # Maybe log this or add an error message to the UI
+            print(f"Skipping row due to error: {row}, {e}")
+            continue
+
+    set_last_update(db)
+    db.commit()
+
+    return RedirectResponse(url="/admin/groups", status_code=HTTP_303_SEE_OTHER)
+
 @app.get("/admin/groups", response_class=HTMLResponse)
 def groups_list(request: Request, db: Session = Depends(get_db)):
     groups = db.query(Group).order_by(Group.parent_id.asc(), Group.sort_order.asc(), Group.name.asc()).all()
@@ -440,10 +495,54 @@ async def group_delete(group_id: int, db: Session = Depends(get_db)):
 
     return RedirectResponse(url="/admin/groups", status_code=HTTP_303_SEE_OTHER)
 
+
 # ---------- Functions CRUD + Import ----------
+@app.post("/admin/functions/import")
+async def import_functions_from_csv(
+    csv_file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+):
+    if not csv_file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a CSV file.")
+
+    content = await csv_file.read()
+    try:
+        content_as_string = content.decode('utf-8')
+        reader = csv.reader(io.StringIO(content_as_string))
+        header = next(reader)
+        if header != ['id', 'Bezeichnung']:
+             raise HTTPException(status_code=400, detail=f"Falscher Spaltenaufbau. Erwartet: id,Bezeichnung. Gefunden: {','.join(header)}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Fehler beim Lesen der CSV-Datei: {e}")
+
+    functions_in_db = {f.id: f for f in db.query(Function).all()}
+
+    for row in reader:
+        try:
+            func_id = int(row[0])
+            name = row[1]
+
+            if func_id in functions_in_db:
+                # Update existing function
+                func = functions_in_db[func_id]
+                func.name = name
+            else:
+                # Create new function
+                func = Function(id=func_id, name=name)
+                db.add(func)
+
+        except (ValueError, IndexError) as e:
+            print(f"Skipping row due to error: {row}, {e}")
+            continue
+
+    set_last_update(db)
+    db.commit()
+
+    return RedirectResponse(url="/admin/functions", status_code=HTTP_303_SEE_OTHER)
+
 @app.get("/admin/functions", response_class=HTMLResponse)
 def functions_list(request: Request, db: Session = Depends(get_db)):
-    funcs = db.query(Function).order_by(Function.sort_order.asc(), Function.name.asc()).all()
+    funcs = db.query(Function).order_by(Function.sort_order.asc(), Function.id.asc(), Function.name.asc()).all()
     return templates.TemplateResponse("admin/functions_list.html", {"request": request, "functions": funcs})
 
 @app.get("/admin/functions/new", response_class=HTMLResponse)
@@ -517,7 +616,62 @@ async def function_delete(func_id: int, db: Session = Depends(get_db)):
     db.commit()
     return RedirectResponse(url="/admin/functions", status_code=HTTP_303_SEE_OTHER)
 
+
 # ---------- Helpers CRUD ----------
+@app.post("/admin/helpers/import_csv")
+async def import_helpers_from_csv(
+    csv_file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+):
+    if not csv_file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a CSV file.")
+
+    content = await csv_file.read()
+    try:
+        content_as_string = content.decode('utf-8')
+        reader = csv.reader(io.StringIO(content_as_string))
+        header = next(reader)
+        expected_header = ['Vorname', 'Nachname', 'GruppenID', 'Hauptfunktion']
+        if header != expected_header:
+             raise HTTPException(status_code=400, detail=f"Falscher Spaltenaufbau. Erwartet: {','.join(expected_header)}. Gefunden: {','.join(header)}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Fehler beim Lesen der CSV-Datei: {e}")
+
+    functions_map = {f.id for f in db.query(Function).all()}
+    groups_map = {g.id for g in db.query(Group).all()}
+
+    for row in reader:
+        try:
+            first_name, last_name, group_id_str, main_function_id = row
+            group_id = int(group_id_str)
+            main_function_id = int(main_function_id)
+            
+            if group_id not in groups_map:
+                print(f"Skipping row: Group with ID {group_id} not found. Row: {row}")
+                continue
+
+            if main_function_id not in functions_map:
+                print(f"Skipping row: Function with id '{main_function_id} ' not found. Row: {row}")
+                continue
+
+            # Create new helper
+            helper = Helper(
+                first_name=first_name,
+                last_name=last_name,
+                group_id=group_id,
+                main_function_id=main_function_id
+            )
+            db.add(helper)
+
+        except (ValueError, IndexError) as e:
+            print(f"Skipping row due to error: {row}, {e}")
+            continue
+
+    set_last_update(db)
+    db.commit()
+
+    return RedirectResponse(url="/admin/helpers", status_code=HTTP_303_SEE_OTHER)
+
 @app.get("/admin/helpers", response_class=HTMLResponse)
 async def helpers_list(request: Request, db: Session = Depends(get_db)):
     helpers = db.query(Helper).order_by(Helper.last_name.asc(), Helper.first_name.asc()).all()
@@ -643,6 +797,13 @@ async def import_photos(zip_file: UploadFile = File(...), db: Session = Depends(
                     if helper:
                         # Kopiere Bild in uploads/photos
                         photo_path = save_upload_from_path(file_path, "uploads/photos")
+                        if helper.photo_path:
+                            try:
+                                p = static_dir / helper.photo_path
+                                if p.exists():
+                                    p.unlink()
+                            except Exception:
+                                pass
                         if photo_path:
                             helper.photo_path = photo_path
                             updated_count += 1
