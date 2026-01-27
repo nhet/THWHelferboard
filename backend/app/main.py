@@ -768,36 +768,50 @@ async def helper_delete_photo(helper_id: int, db: Session = Depends(get_db)):
 async def import_photos(zip_file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not zip_file.filename.lower().endswith('.zip'):
         raise HTTPException(status_code=400, detail="Nur ZIP-Dateien erlaubt")
-    
-    # Temporäres Verzeichnis für Extraktion
+    print("Starte Import Fotos aus ZIP …")
+
     with tempfile.TemporaryDirectory() as temp_dir:
         zip_path = Path(temp_dir) / "photos.zip"
-        with zip_path.open("wb") as f:
-            f.write(await zip_file.read())
         
-        # Extrahiere ZIP
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(temp_dir)
+        print(f"Versuche zu entpacken: {zip_path}")
+        print(f"Zielverzeichnis: {temp_dir}")
+
+        try:
+            with zip_path.open("wb") as f:
+                f.write(await zip_file.read())
+        except Exception as e:
+            print(f"Fehler beim Entpacken: {e}")
+                  
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                files = zip_ref.namelist()
+                print(f"Dateien im ZIP: {len(files)} Stück")
+                
+                zip_ref.extractall(temp_dir)
+                
+            actual_files = os.listdir(temp_dir)
+            print(f"Inhalt von {temp_dir} nach Entpacken: {actual_files}")
+        except Exception as e:
+            print(f"Fehler beim Entpacken: {e}")
         
-        # Verarbeite Bilder
         updated_count = 0
-        for file_path in Path(temp_dir).rglob("*.jpg"):
+        for file_path in Path(temp_dir).rglob("*.jpg", case_sensitive=False):
             filename = file_path.name
+            print(f"Verarbeite Bild: {filename}")
             if filename.lower().endswith('.jpg'):
-                # Parse Name: <Nachname> <Vorname>.JPG
-                name_part = filename[:-4]  # Entferne .JPG
+                name_part = filename[:-4]
                 parts = name_part.split(' ', 1)
                 if len(parts) == 2:
                     last_name, first_name = parts
-                    # Finde Helper
                     helper = db.query(Helper).filter(
                         Helper.last_name.ilike(last_name.strip()),
                         Helper.first_name.ilike(first_name.strip())
                     ).first()
                     if helper:
-                        # Kopiere Bild in uploads/photos
+                        print(f"  Gefunden: {helper.first_name} {helper.last_name} (ID: {helper.id})")
                         photo_path = save_upload_from_path(file_path, "uploads/photos")
                         if helper.photo_path:
+                            print(f"Lösche altes Foto: {helper.photo_path}")
                             try:
                                 p = static_dir / helper.photo_path
                                 if p.exists():
@@ -807,6 +821,9 @@ async def import_photos(zip_file: UploadFile = File(...), db: Session = Depends(
                         if photo_path:
                             helper.photo_path = photo_path
                             updated_count += 1
+                            print(f"Foto aktualisiert.")
+        
+        print(f"Import abgeschlossen. {updated_count} Fotos aktualisiert.")
         
         if updated_count > 0:
             set_last_update(db)

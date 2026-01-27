@@ -10,6 +10,9 @@ COPY ./backend/ /app/
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
+# Install nano
+RUN apt-get update && apt-get install -y nano && rm -rf /var/lib/apt/lists/*
+
 # Define mount points for the database and uploads.
 # These directories can be mounted as volumes from the host or a named volume
 # when running the container.
@@ -22,4 +25,4 @@ EXPOSE 80
 
 # The command to run the Uvicorn server for the FastAPI application.
 # It will listen on all interfaces on port 80.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "80"]
