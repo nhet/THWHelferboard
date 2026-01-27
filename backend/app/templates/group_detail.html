@@ -48,16 +48,25 @@
             {% endif %}
           </div>
           <div class="helper-name_detail">
-            {{ helper.first_name }} {{ helper.last_name }}
+            <div class="helper-name fn">
+              {% if incognito_level >= 1 %}
+                {{ helper.first_name[0] }}.
+              {% else %}
+                {{ helper.first_name }}
+              {% endif %}
+            </div>
+            <div class="helper-name ln">
+              {% if incognito_level >= 1 %}
+                {{ helper.last_name[0] }}.
+              {% else %}
+                {{ helper.last_name }}
+              {% endif %}
+            </div>          
           </div>
-          <div class="helper-functions_detail">
-            <span class="main-function_detail"
-              >{{ helper.main_function.short_name or helper.main_function.name
-              }}</span
-            >
+          <div class="helper-functions_detail">            
             {% if helper.secondary_functions %}
             <span class="secondary-functions_detail">
-              ({{ helper.secondary_functions | map(attribute='short_name') |
+              ({{ helper.secondary_functions | map(attribute='legend_name') |
               join(', ') }})
             </span>
             {% endif %}

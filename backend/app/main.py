@@ -179,6 +179,8 @@ def group_detail(group_id: int, request: Request, db: Session = Depends(get_db))
     group = db.query(Group).get(group_id)
     if not group or not group.detail_enabled:
         raise HTTPException(404)
+    
+    incognito_level = get_incognito_level(db)
     images = db.query(GroupImage).filter(GroupImage.group_id == group_id).order_by(GroupImage.sort_order.asc()).all()
     detail_groups = db.query(Group).filter(Group.detail_enabled == 1).order_by(Group.sort_order.asc()).all()
     
@@ -187,7 +189,7 @@ def group_detail(group_id: int, request: Request, db: Session = Depends(get_db))
         .join(Helper.main_function)
         .filter(Helper.group_id == group_id)
         .options(joinedload(Helper.main_function), joinedload(Helper.secondary_functions))
-        .order_by(Function.sort_order.asc(), Helper.first_name.asc())
+        .order_by(Function.sort_order.asc(), Helper.last_name.asc())
     )
     helpers = helpers_query.all()
 
@@ -196,7 +198,7 @@ def group_detail(group_id: int, request: Request, db: Session = Depends(get_db))
         for key, group_helpers in itertools.groupby(helpers, key=lambda h: h.main_function):
             helpers_by_function.append((key, list(group_helpers)))
 
-    return templates.TemplateResponse("group_detail.html", {"request": request, "group": group, "images": images, "detail_groups": detail_groups, "helpers_by_function": helpers_by_function})
+    return templates.TemplateResponse("group_detail.html", {"request": request, "group": group, "images": images, "detail_groups": detail_groups, "helpers_by_function": helpers_by_function,"incognito_level": incognito_level})
 
 @app.get("/last_update")
 
