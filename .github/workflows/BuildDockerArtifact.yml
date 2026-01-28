@@ -3,6 +3,7 @@ name: Build and Export Image
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,9 +19,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          tags: |
-            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha_short }}
-            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+          tags: {{ steps.img.outputs.name }}:${{ github.sha }}
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
