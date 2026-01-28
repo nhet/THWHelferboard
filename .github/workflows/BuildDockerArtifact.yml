@@ -24,7 +24,7 @@ jobs:
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: helferboard:${{ github.sha }}
+          name: helferboard_${{ github.sha }}
           path: /tmp/helferboard.tar
           if-no-files-found: error
           retention-days: 5
