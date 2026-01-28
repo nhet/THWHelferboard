@@ -20,4 +20,11 @@ jobs:
         with:
           context: .
           tags: helferboard:${{ github.sha }}
-          push: false
+          outputs: type=docker,dest=/tmp/helferboard.tar
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: helferboard:${{ github.sha }}
+          path: /tmp/helferboard.tar
+          if-no-files-found: error
+          retention-days: 5
