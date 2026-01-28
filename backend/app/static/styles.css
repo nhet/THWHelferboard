@@ -331,7 +331,7 @@ select {
   top: 0;
   left: 250px;
   width: 820px;
-  height: 253px;
+  height: 280px;
   display: grid;
   grid-template-rows: repeat(5, min-content);
   grid-template-columns: repeat(5, 1fr);
