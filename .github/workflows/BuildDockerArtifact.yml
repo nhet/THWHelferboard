@@ -20,4 +20,4 @@ jobs:
         with:
           context: .
           tags: helferboard:${{ github.sha }}
-          push: true
+          push: false
