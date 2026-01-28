@@ -19,5 +19,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          tags: {{ steps.img.outputs.name }}:${{ github.sha }}
+          tags: ${{ steps.img.outputs.name }}:${{ github.sha }}
           push: true
