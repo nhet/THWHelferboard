@@ -18,12 +18,9 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          tags: helferboard:latest
-          outputs: type=docker,dest=/tmp/helferboard${{ matrix.version }}.tar
-
-      - name: Upload image as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: helferboard-image${{ matrix.version }}
-          path: /tmp/helferboard${{ matrix.version }}.tar
-          retention-days: 5
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.sha_short }}
+            ${{ steps.meta.outputs.image }}:${{ github.sha }}
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
