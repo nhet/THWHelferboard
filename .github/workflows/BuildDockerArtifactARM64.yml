@@ -19,14 +19,14 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          tags: helferboard_ARM64:${{ github.sha }}
+          tags: helferboard_arm64:${{ github.sha }}
           platforms: linux/arm64
-          outputs: type=docker,dest=/tmp/helferboard_ARM64.tar
+          outputs: type=docker,dest=/tmp/helferboard_arm64.tar
 
       - name: Upload image artifact
         uses: actions/upload-artifact@v4
         with:
-          name: helferboard_ARM64_${{ github.sha }}
-          path: /tmp/helferboard_ARM64.tar
+          name: helferboard_arm64_${{ github.sha }}
+          path: /tmp/helferboard_arm64.tar
           if-no-files-found: error
           retention-days: 5
