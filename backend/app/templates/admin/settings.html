@@ -40,10 +40,4 @@
     </li>
   {% endfor %}
 </ul>
-
-<h3>Anwendung Update</h3>
-<form method="post" action="/admin/settings/upload_update" enctype="multipart/form-data" onsubmit="return confirm('Sind Sie sicher, dass Sie die Anwendung aktualisieren möchten? Dies überschreibt die aktuellen Dateien.')">
-  <input type="file" name="update_zip" accept=".zip" required>
-  <button class="btn" type="submit">Update hochladen</button>
-</form>
 {% endblock %}

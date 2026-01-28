@@ -262,47 +262,6 @@ async def delete_carousel(img_id: int, db: Session = Depends(get_db)):
         db.commit()
     return RedirectResponse(url="/admin/settings", status_code=HTTP_303_SEE_OTHER)
 
-@app.post("/admin/settings/upload_update")
-async def upload_update(update_zip: UploadFile = File(...), db: Session = Depends(get_db)):
-    if not update_zip.filename.lower().endswith('.zip'):
-        raise HTTPException(status_code=400, detail="Nur ZIP-Dateien erlaubt")
-
-    project_root = BASE_DIR.parent.parent
-
-    # Temporäres Verzeichnis für Extraktion
-    with tempfile.TemporaryDirectory() as temp_dir:
-        zip_path = Path(temp_dir) / "update.zip"
-        with zip_path.open("wb") as f:
-            f.write(await update_zip.read())
-
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(temp_dir)
-
-        extracted_dir = Path(temp_dir)
-        for item in extracted_dir.rglob('*'):
-            if item.is_file():
-                relative_path = item.relative_to(extracted_dir)
-                target_path = project_root / relative_path
-                target_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(item, target_path)
-
-    try:
-        if Path(temp_dir) / "update.zip".exists():
-            Path(temp_dir).joinpath("update.zip").unlink()  
-    except:
-        pass
-
-    if "_lite" in update_zip.filename.lower():
-        install_requirements(backend_dir=str(project_root / "backend"), req_file="requirements.txt", timeout=300);
-
-    backend_dir = BASE_DIR.parent
-    asyncio.create_task(restart_backend(backend_dir))
-        
-    set_last_update(db)
-    db.commit()
-
-    return RedirectResponse(url="/admin/settings", status_code=HTTP_303_SEE_OTHER)
-
 def restart_backend(backend_dir):
         import time
         time.sleep(2)
