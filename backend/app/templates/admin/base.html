@@ -7,8 +7,26 @@
   <title>THEOrganigramm</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <script src="/static/htmx.min.js"></script>
+  <script>
+    window.serverReachable = false;
+
+    window.handleUpdate = function(event) {
+      const data = JSON.parse(event.detail.xhr.responseText);
+      if (window.lastKnown && data.timestamp !== window.lastKnown) {
+        window.location.href = "/";
+      }
+      window.lastKnown = data.timestamp;
+      window.serverReachable = true;
+    };
+
+    window.handleError = function(event) {
+      // ignore errors
+      window.serverReachable = false;
+    };
+  </script>
 </head>
-<body>
+<body hx-boost="true">
   <main>
   {% block content %}
     <header class="site-header">
@@ -45,6 +63,29 @@
         }
       }
     });
+  </script>
+  <div id="polling-div" hx-get="/last_update" hx-trigger="every 5s" hx-swap="none"></div>
+  <script>
+    let lastKnown = null;
+    window.serverReachable = false;
+
+    window.handleUpdate = function(event) {
+      const data = JSON.parse(event.detail.xhr.responseText);
+      if (lastKnown && data.timestamp !== lastKnown) {
+        window.location.href = "/";
+      }
+      lastKnown = data.timestamp;
+      window.serverReachable = true;
+    };
+
+    window.handleError = function(event) {
+      // ignore errors
+      window.serverReachable = false;
+    };
+
+    document.body.addEventListener('htmx:responseError', function(evt) {      alert('Aktion fehlgeschlagen! Der Server ist möglicherweise nicht erreichbar.');    });
+    document.getElementById('polling-div').addEventListener('htmx:afterRequest', window.handleUpdate);
+    document.getElementById('polling-div').addEventListener('htmx:responseError', window.handleError);
   </script>
   </body>
 </html>

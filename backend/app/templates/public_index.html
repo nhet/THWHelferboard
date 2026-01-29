@@ -183,7 +183,7 @@
   let currentIndex = 0;
 
   function switchPage() {
-    if (pages.length > 1){
+    if (window.serverReachable && pages.length > 1){
       currentIndex = (currentIndex + 1) % pages.length;
       window.location.href = pages[currentIndex];
     }

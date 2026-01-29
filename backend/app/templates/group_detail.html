@@ -87,9 +87,11 @@
   let currentIndex = pages.indexOf(window.location.pathname);
 
   function switchPage() {
-    currentIndex = (currentIndex + 1) % pages.length;
-    console.log('Switching to:', pages[currentIndex]);
-    window.location.href = pages[currentIndex];
+    if (window.serverReachable) {
+      currentIndex = (currentIndex + 1) % pages.length;
+      console.log('Switching to:', pages[currentIndex]);
+      window.location.href = pages[currentIndex];
+    }
   }
 
   setInterval(switchPage, 30000);
