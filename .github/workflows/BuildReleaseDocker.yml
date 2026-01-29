@@ -1,0 +1,71 @@
+name: Build Multi-Arch Release (Local Export)
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get version from tag
+        id: get_version
+        run: |
+          CLEAN_VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
+      - name: Update version.py
+        run: |
+          VERSION_FILE="backend/app/version.py"
+          sed -i "s/__version__ = \".*\"/__version__ = \"${{ steps.get_version.outputs.version }}\"/" $VERSION_FILE
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add $VERSION_FILE
+          git commit -m "chore: update version.py to ${{ steps.get_version.outputs.version }}"
+          git push origin main || echo "No changes to push"
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image ARM64
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          outputs: type=docker,dest=/tmp/helferboard_arm64.tar
+          tags: helferboard_arm64:${{ steps.get_version.outputs.version }}
+      - name: Build Docker image AMD64
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          outputs: type=docker,dest=/tmp/helferboard_amd64.tar
+          tags: helferboard_amd64:${{ steps.get_version.outputs.version }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: Release ${{ steps.get_version.outputs.tag }}
+          files: |
+            /tmp/helferboard_arm64.tar
+            /tmp/helferboard_amd64.tar
+          body: |
+            ## Release ${{ steps.get_version.outputs.tag }}
+            
+            Dieses Release enthält die Docker-Images als `.tar` Dateien für:
+            - **ARM64** (z.B. Raspberry Pi, Apple Silicon)
+            - **AMD64** (Standard 64-bit PCs/Server)
+            
+            Laden Sie die gewünschte Datei herunter und importieren Sie sie mit:
+            `docker load -i <dateiname>.tar`
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

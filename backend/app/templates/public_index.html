@@ -26,7 +26,8 @@
 
 {% endif %}
 {% if incognito_level < 2 %}
-<div class="legende">
+<div class="public-page">
+  <div class="legende">
   <span class="legend-title">Legende:</span>
   {% for func in allFunctionsInUse %}
     {% if func.emblem_svg_path %}
@@ -39,9 +40,9 @@
     {% endif %}
   {% endfor %}
 </div>
-<div class="public-page">
+
   {% for node in tree %}
-    <section class="group-section" style="--indent: {{ node.level }}">
+    <div class="group-section" style="--indent: {{ node.level }}">
       <h2 class="group-title">{{ node.group.name }}</h2>
       <div class="helper-grid">
         {% for h in node.helpers %}
@@ -77,7 +78,7 @@
           </div>
         {% endfor %}
       </div>
-    </section>
+    </div>
   {% endfor %}
 </div>
 {% endif %}

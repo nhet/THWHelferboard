@@ -329,7 +329,7 @@ select {
 .legende {
   position: absolute;
   top: 0;
-  left: 250px;
+  margin-left: 235px;
   width: 820px;
   height: 280px;
   display: grid;
