@@ -1,4 +1,4 @@
-name: Build Multi-Arch Release (Local Export)
+name: Build Multi-Arch Release with Changelog
 
 on:
   push:
@@ -15,57 +15,77 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - name: Get version from tag
-        id: get_version
+          fetch-depth: 0 
+
+      - name: Get version and changelog
+        id: vars
         run: |
           CLEAN_VERSION=${GITHUB_REF_NAME#v}
           echo "version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
           echo "tag=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
+          
+          # Ermittle den vorherigen Tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${{ github.ref_name }}^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # Wenn es kein vorheriges Tag gibt (erstes Release)
+            CHANGELOG=$(git log --pretty=format:"* %s (%h)")
+          else
+            # Alle Commits zwischen letztem Tag und aktuellem Tag
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..${{ github.ref_name }} --pretty=format:"* %s (%h)")
+          fi
+          
+          # Workaround für mehrzeilige Strings in GitHub Actions Outputs
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Update version.py
         run: |
           VERSION_FILE="backend/app/version.py"
-          sed -i "s/__version__ = \".*\"/__version__ = \"${{ steps.get_version.outputs.version }}\"/" $VERSION_FILE
+          sed -i "s/__version__ = \".*\"/__version__ = \"${{ steps.vars.outputs.version }}\"/" $VERSION_FILE
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add $VERSION_FILE
-          git commit -m "chore: update version.py to ${{ steps.get_version.outputs.version }}"
+          git commit -m "chore: update version.py to ${{ steps.vars.outputs.version }}"
           git push origin main || echo "No changes to push"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Build Docker image ARM64
+
+      - name: Build ARM64
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/arm64
           outputs: type=docker,dest=/tmp/helferboard_arm64.tar
-          tags: helferboard_arm64:${{ steps.get_version.outputs.version }}
-      - name: Build Docker image AMD64
+          tags: helferboard_arm64:${{ steps.vars.outputs.version }}
+
+      - name: Build AMD64
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/amd64
           outputs: type=docker,dest=/tmp/helferboard_amd64.tar
-          tags: helferboard_amd64:${{ steps.get_version.outputs.version }}
+          tags: helferboard_amd64:${{ steps.vars.outputs.version }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.get_version.outputs.tag }}
-          name: Release ${{ steps.get_version.outputs.tag }}
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: Release ${{ steps.vars.outputs.tag }}
           files: |
             /tmp/helferboard_arm64.tar
             /tmp/helferboard_amd64.tar
           body: |
-            ## Release ${{ steps.get_version.outputs.tag }}
+            ## Änderungen in dieser Version
+            ${{ steps.vars.outputs.changelog }}
             
-            Dieses Release enthält die Docker-Images als `.tar` Dateien für:
-            - **ARM64** (z.B. Raspberry Pi, Apple Silicon)
-            - **AMD64** (Standard 64-bit PCs/Server)
-            
-            Laden Sie die gewünschte Datei herunter und importieren Sie sie mit:
-            `docker load -i <dateiname>.tar`
+            ---
+            **Images:**
+            - `helferboard_arm64.tar` (Apple Silicon / Raspberry Pi)
+            - `helferboard_amd64.tar` (Standard PC/Server)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
