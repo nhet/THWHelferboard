@@ -42,8 +42,8 @@
 </div>
 
   {% for node in tree %}
-    <div class="group-section" style="--indent: {{ node.level }}">
-      <h2 class="group-title">{{ node.group.name }}</h2>
+    <div class="group-section" style="--indent: 0px">
+      <h2 class="group-title">{{ node.group.name }} ({{node.helpers|length}})</h2>
       <div class="helper-grid">
         {% for h in node.helpers %}
           <div class="helper-card">

@@ -18,7 +18,8 @@
   </div>
   {% endif %} {% if group.description %}
   <div class="group-description_detail">{{ group.description | safe }}</div>
-  {% endif %} {% if helpers_by_function %}
+  {% endif %} 
+  {% if helpers_by_function %}
   <div class="group-helpers_detail">
     {% for function, helpers in helpers_by_function %}
     <div class="function-group_detail">
@@ -80,6 +81,72 @@
   {% endif %}
 </div>
 
+<script>
+  document.addEventListener('DOMContentLoaded', function() 
+  {
+    const helpersDiv = document.querySelector('.group-helpers_detail');
+
+    function smoothScroll(element, to, duration, callback) 
+    {
+      const start = element.scrollTop;
+      const change = to - start;
+      let startTime = null;
+
+      function animateScroll(currentTime) {
+        if (startTime === null) {
+          startTime = currentTime;
+        }
+        const timeElapsed = currentTime - startTime;
+        let t = timeElapsed / (duration / 2);
+        let scrollTop;
+        if (t < 1) {
+          scrollTop = change / 2 * t * t + start;
+        } else {
+          t--;
+          scrollTop = -change / 2 * (t * (t - 2) - 1) + start;
+        }
+        element.scrollTop = scrollTop;
+
+        if (timeElapsed < duration) {
+          requestAnimationFrame(animateScroll);
+        } else {
+          element.scrollTop = to;
+          if (callback) {
+            callback();
+          }
+        }
+      }
+      requestAnimationFrame(animateScroll);
+    }
+
+    if (helpersDiv && helpersDiv.scrollHeight > helpersDiv.clientHeight) 
+    {
+      const topReachedEvent = new Event('topReached');
+      const bottomReachedEvent = new Event('bottomReached');
+
+      helpersDiv.addEventListener('topReached', () => {
+        setTimeout(() => {
+          smoothScroll(helpersDiv, helpersDiv.scrollHeight, 5000, () => {
+            helpersDiv.dispatchEvent(bottomReachedEvent);
+          });
+        }, 5000);
+      });
+
+      helpersDiv.addEventListener('bottomReached', () => {
+        setTimeout(() => {
+          smoothScroll(helpersDiv, 0, 5000, () => {
+            helpersDiv.dispatchEvent(topReachedEvent);
+          });
+        }, 5000);
+      });
+
+      setTimeout(() => {
+        helpersDiv.dispatchEvent(topReachedEvent);
+      }, 5000);
+    }
+  });
+</script>
+
 {% if detail_groups %} {% set pages_list = ["/"] %} {% for g in detail_groups %}
 {% do pages_list.append("/group/" + g.id|string) %} {% endfor %}
 <script>
@@ -95,32 +162,6 @@
   }
 
   setInterval(switchPage, 30000);
-</script>
-
-<script>
-  const helpersDiv = document.querySelector(".group-helpers_detail");
-  let scrollingDown = true;
-
-  function autoScrollHelpers() {
-    const scrollHeight = helpersDiv.scrollHeight - helpersDiv.clientHeight;
-    const currentScroll = helpersDiv.scrollTop;
-
-    if (scrollingDown) {
-      if (currentScroll < scrollHeight) {
-        helpersDiv.scrollBy(0, 1);
-      } else {
-        scrollingDown = false;
-      }
-    } else {
-      if (currentScroll > 0) {
-        helpersDiv.scrollBy(0, -1);
-      } else {
-        scrollingDown = true;
-      }
-    }
-  }
-
-  setInterval(autoScrollHelpers, 50);
 </script>
 
 {% endif %} {% endblock %}

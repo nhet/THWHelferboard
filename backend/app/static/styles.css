@@ -22,6 +22,15 @@ body {
   color: var(--fg);
 }
 
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .site-header {
   display: flex;
   align-items: center;
@@ -45,7 +54,7 @@ main {
 .btn {
   display: inline-block;
   padding: 6px 10px;
-  background: #003399; /*var(--accent);*/
+  background: #003399;
   color: #fff;
   border-radius: 6px;
   text-decoration: none;
@@ -136,7 +145,7 @@ select {
   align-items: center;
   text-align: center;
   height: 203px;
-  width: 109px;
+  width: 110px;
   flex-shrink: 0;
 }
 
@@ -189,23 +198,34 @@ select {
 .group-detail_detail {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* gesamte Höhe des Viewports */
-  overflow: hidden; /* scrollen nur im Helfer-Div */
+  height: 100vh; 
+  overflow: hidden; 
   max-width: 1080px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 .carousel-container-detail,
 .group-description_detail {
-  flex: 0 0 auto; /* bleibt oben fixiert */
+  flex: 0 0 auto; 
   margin-bottom: 20px;
 }
 
+.group-description_detail td{
+  padding: 6px 10px;
+}
+
 .group-helpers_detail {
-  flex: 1 1 auto; /* nimmt den Rest des Platzes ein */
-  overflow-y: auto; /* scrollt nur hier */
-  padding-right: 10px; /* optional für Scrollbar */
+  flex: 1 1 auto; 
+  overflow-y: auto; 
+  padding-right: 10px; 
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  grid-template-rows: repeat(5, min-content);
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.group-helpers_detail::-webkit-scrollbar {
+  display: none;
 }
 
 .function-group_detail {
@@ -222,7 +242,7 @@ select {
 .helpers-row_detail {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 9px;
 }
 
 .helper-card_detail {
@@ -233,7 +253,7 @@ select {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  width: 180px;
+  width: 165px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -273,7 +293,7 @@ select {
   border-radius: 10px;
 }
 
-/* Items übereinander stapeln */
+
 .carousel-item {
   position: absolute;
   inset: 0;
@@ -282,7 +302,6 @@ select {
   opacity: 0;
 }
 
-/* Fade-Animation */
 .carousel-detail:not(.single-image-detail) .carousel-item {
   animation-name: fade;
   animation-duration: calc(var(--total-slides) * 4s);
@@ -328,15 +347,13 @@ select {
 /* ===== Legende CSS ===== */
 .legende {
   position: absolute;
-  top: 0;
-  margin-left: 235px;
-  width: 820px;
-  height: 280px;
+  top: 20px;
+  margin-left: 240px;
+  width: 765px;
+  height: 235px;
   display: grid;
   grid-template-rows: repeat(5, min-content);
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px 20px;
-  padding: 10px;
   box-sizing: border-box;
   border: #1662aa 3px solid;
   border-radius: 10px;
@@ -348,7 +365,9 @@ select {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 4px;
+}
+.legend-item span{
+  font-size: small;
 }
 
 .legend-title {
@@ -358,5 +377,5 @@ select {
 }
 .function-group_detail h3 img {
   vertical-align: middle;
-  margin-left: 8px; /* Abstand zum Text */
+  margin-left: 8px;
 }
