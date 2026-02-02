@@ -14,6 +14,7 @@ import io
 from fastapi import FastAPI, Request, Depends, Form, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import Response
 import itertools
 from sqlalchemy.orm import joinedload
 from fastapi.templating import Jinja2Templates
@@ -26,11 +27,27 @@ from sqlalchemy import select, func as sa_func
 from .database import Base, engine, get_db
 from .models import Group, Function, Helper, Setting, CarouselImage, GroupImage, helper_secondary_functions
 from .version import __version__
+
+class CacheStaticFiles(StaticFiles):
+    def __init__(self, *args, **kwargs):
+        self.cache_timeout = 31536000  # 1 Jahr in Sekunden
+        super().__init__(*args, **kwargs)
+
+    async def get_response(self, path: str, scope) -> Response:
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = f"public, max-age={self.cache_timeout}, immutable"
+        return response
+
 app = FastAPI(title="Helferboard")
 
 BASE_DIR = Path(__file__).resolve().parent
 static_dir = BASE_DIR / "static"
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/static",                  CacheStaticFiles(directory=static_dir),                      name="static")
+app.mount("/static/uploads/photos",   CacheStaticFiles(directory=static_dir / "uploads/photos"),   name="photos")
+app.mount("/static/uploads/emblems",  CacheStaticFiles(directory=static_dir / "uploads/emblems"),  name="emblems")
+app.mount("/static/uploads/groups",   CacheStaticFiles(directory=static_dir / "uploads/groups"),   name="groups")
+app.mount("/static/uploads/carousel", CacheStaticFiles(directory=static_dir / "uploads/carousel"), name="carousel")
+
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.add_extension('jinja2.ext.do')
 
@@ -57,8 +74,6 @@ def initialize_last_update():
                 conn.commit()
     except Exception as e:
         print(f"Error initializing settings: {e}")
-
-# Helpers
 
 def get_last_update(db: Session) -> datetime:
     setting = db.query(Setting).filter(Setting.key == "last_update").first()
