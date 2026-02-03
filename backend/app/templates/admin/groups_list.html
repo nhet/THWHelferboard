@@ -16,7 +16,7 @@
   </thead>
   <tbody>
     {% for g in groups %}
-      <tr>
+      <tr data-href="/admin/groups/{{ g.id }}" tabindex="0">
         <td>{{ g.id }}</td>
         <td>{{ g.name }}</td>
         <td>{{ g.parent.name if g.parent else '-' }}</td>

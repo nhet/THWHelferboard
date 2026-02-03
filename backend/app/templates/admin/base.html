@@ -46,6 +46,32 @@
         }
       }
     });
+
+    (function() {
+      function initClickableRows() {
+        document.querySelectorAll('.list-table tbody tr').forEach(function(tr) {
+          var href = tr.getAttribute('data-href');
+          if(!href) return;
+          tr.style.cursor = 'pointer';
+          tr.tabIndex = 0;
+          tr.addEventListener('click', function(e) {
+            if (e.target.closest('a, button, form, input')) return;
+            window.location = href;
+          });
+          tr.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              if (e.target.closest('a, button, form, input')) return;
+              e.preventDefault();
+              window.location = href;
+            }
+          });
+        });
+      }
+      document.addEventListener('DOMContentLoaded', initClickableRows);
+      // Re-init if DOM changes (HTMX or dynamic inserts)
+      var observer = new MutationObserver(function() { initClickableRows(); });
+      observer.observe(document.body, {childList:true, subtree:true});
+    })();
   </script>
   </body>
 </html>

@@ -16,7 +16,7 @@
   </thead>
   <tbody>
     {% for f in functions %}
-      <tr>
+      <tr data-href="/admin/functions/{{ f.id }}" tabindex="0">
         <td>{{ f.id }}</td>
         <td>{{ f.name }}</td>
         <td>{{ f.short_name or '-' }}</td>

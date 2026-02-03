@@ -78,6 +78,14 @@ main {
   text-align: left;
 }
 
+/* Clickable table rows */
+.list-table tr[data-href] {
+  cursor: pointer;
+}
+.list-table tr[data-href]:hover {
+  background: rgba(0,0,0,0.04);
+} 
+
 label {
   display: block;
   margin: 8px 0;
