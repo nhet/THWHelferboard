@@ -15,9 +15,15 @@
         <button class="btn" type="submit">Importieren</button>
     </form>
 </div>
+<div class="table-toolbar" style="margin-bottom:0.5rem; display:flex; gap:8px; align-items:center;">
+  <div class="table-filter-wrapper">
+    <input class="table-filter" placeholder="Filter (alle Spalten)" aria-label="Filter Helfer" />
+    <button type="button" class="table-filter-reset hidden" aria-label="Filter zurücksetzen" title="Filter zurücksetzen">✖</button>
+  </div>
+</div>
 <table class="list-table">
   <thead>
-    <tr><th>ID</th><th>Name</th><th>Gruppe</th><th>Hauptfunktion</th><th>Aktionen</th></tr>
+    <tr><th>ID</th><th>Name</th><th>Gruppe</th><th>Hauptfunktion</th><th class="no-sort">Aktionen</th></tr>
   </thead>
   <tbody>
     {% for h in helpers %}

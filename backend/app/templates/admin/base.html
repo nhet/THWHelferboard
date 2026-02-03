@@ -67,9 +67,112 @@
           });
         });
       }
-      document.addEventListener('DOMContentLoaded', initClickableRows);
+
+      function makeHeadersSortable(table) {
+        var thead = table.querySelector('thead');
+        if(!thead) return;
+        thead.querySelectorAll('th').forEach(function(th, idx) {
+          if(th.classList.contains('no-sort')) return;
+          if(th.querySelector('.sort-indicator')) return; // already initialized
+          th.classList.add('sortable');
+          var span = document.createElement('span');
+          span.className = 'sort-indicator';
+          th.appendChild(span);
+          th.tabIndex = 0;
+          th.addEventListener('click', function() { sortByColumn(table, idx); });
+          th.addEventListener('keydown', function(e) { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sortByColumn(table, idx); } });
+        });
+      }
+
+      function sortByColumn(table, colIndex) {
+        var currentCol = table.dataset.sortCol ? parseInt(table.dataset.sortCol) : null;
+        var currentDir = table.dataset.sortDir || 'asc';
+        var newDir = (currentCol === colIndex && currentDir === 'asc') ? 'desc' : 'asc';
+        var tbody = table.querySelector('tbody');
+        var rows = Array.from(tbody.querySelectorAll('tr'));
+        rows.sort(function(a,b) {
+          var aText = (a.children[colIndex] && a.children[colIndex].textContent || '').trim();
+          var bText = (b.children[colIndex] && b.children[colIndex].textContent || '').trim();
+          var aNum = parseFloat(aText.replace(/[^0-9,.-]/g, '').replace(',','.'));
+          var bNum = parseFloat(bText.replace(/[^0-9,.-]/g, '').replace(',','.'));
+          if(!isNaN(aNum) && !isNaN(bNum)) {
+            return (aNum - bNum) * (newDir === 'asc' ? 1 : -1);
+          }
+          return (aText.localeCompare(bText, 'de', {numeric:true}) * (newDir === 'asc' ? 1 : -1));
+        });
+        // Re-attach rows
+        rows.forEach(function(r){ tbody.appendChild(r); });
+        // Update state and header classes
+        table.dataset.sortCol = colIndex;
+        table.dataset.sortDir = newDir;
+        table.querySelectorAll('th').forEach(function(th, idx){
+          th.classList.remove('sort-asc','sort-desc');
+          if(idx === colIndex) th.classList.add(newDir === 'asc' ? 'sort-asc' : 'sort-desc');
+        });
+      }
+
+      function initFilter(table) {
+        var toolbar = table.previousElementSibling;
+        if(!toolbar || !toolbar.classList.contains('table-toolbar')) return;
+        var input = toolbar.querySelector('.table-filter');
+        if(!input) return;
+        var reset = toolbar.querySelector('.table-filter-reset');
+        function updateResetVisibility() {
+          if(!reset) return;
+          if((input.value || '').trim()) reset.classList.remove('hidden'); else reset.classList.add('hidden');
+        }
+        // debounce
+        var timeout;
+        input.addEventListener('input', function() {
+          clearTimeout(timeout);
+          timeout = setTimeout(function(){ applyFilter(table, input.value); }, 150);
+          updateResetVisibility();
+        });
+        input.addEventListener('keydown', function(e) {
+          if(e.key === 'Escape') {
+            if(reset) reset.click();
+          }
+        });
+        if(reset) {
+          reset.addEventListener('click', function() {
+            input.value = '';
+            applyFilter(table, '');
+            updateResetVisibility();
+            try { input.focus(); } catch(e) {}
+          });
+        }
+        // set initial state
+        updateResetVisibility();
+      }
+
+      function applyFilter(table, query) {
+        query = (query || '').trim().toLowerCase();
+        var rows = table.querySelectorAll('tbody tr');
+        rows.forEach(function(r){
+          var text = Array.from(r.children).map(function(c){ return c.textContent.trim().toLowerCase(); }).join(' ');
+          var match = !query || text.indexOf(query) !== -1;
+          r.style.display = match ? '' : 'none';
+        });
+      }
+
+      function initTableTools() {
+        document.querySelectorAll('.list-table').forEach(function(table) {
+          makeHeadersSortable(table);
+          initFilter(table);
+        });
+        // Focus the first table filter input on initial load so typing can start immediately
+        if(!document.activeElement || document.activeElement === document.body) {
+          var firstFilter = document.querySelector('.table-filter');
+          if(firstFilter) {
+            try { firstFilter.focus({preventScroll:true}); } catch(e) { firstFilter.focus(); }
+            if(firstFilter.select) try { firstFilter.select(); } catch(e) {}
+          }
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function() { initClickableRows(); initTableTools(); });
       // Re-init if DOM changes (HTMX or dynamic inserts)
-      var observer = new MutationObserver(function() { initClickableRows(); });
+      var observer = new MutationObserver(function() { initClickableRows(); initTableTools(); });
       observer.observe(document.body, {childList:true, subtree:true});
     })();
   </script>

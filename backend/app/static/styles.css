@@ -84,7 +84,73 @@ main {
 }
 .list-table tr[data-href]:hover {
   background: rgba(0,0,0,0.04);
-} 
+}
+.list-table tr[data-href]:focus {
+  outline: 3px solid var(--accent);
+  background: rgba(0,0,0,0.04);
+}
+
+/* Table toolbar */
+.table-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.table-filter-wrapper { position: relative; display: inline-flex; align-items: center; }
+.table-filter { 
+  padding: 6px 8px;
+  padding-right: 36px; /* room for the button */
+  border-radius: 6px;
+  border: 1px solid #334;
+  background: #fff;
+  min-width: 220px;
+  box-sizing: border-box;
+  display: inline-block;
+}
+
+.table-filter-reset {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 6px;
+  height: auto;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.table-filter-reset:hover { color: var(--fg); }
+.table-filter-reset.hidden { display: none; }
+.table-filter-reset:focus { outline: 2px solid var(--accent); border-radius: 4px; background: rgba(0,0,0,0.04); }
+/* Sortable headers */
+.list-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.list-table th .sort-indicator {
+  margin-left: 6px;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  display: inline-block;
+  width: 1.2em;
+  text-align: center;
+}
+.list-table th.sort-asc .sort-indicator::after { content: '▲'; color: var(--accent); }
+.list-table th.sort-desc .sort-indicator::after { content: '▼'; color: var(--accent); }
+
+/* small visual tweak for header focus */
+.list-table th:focus {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+
 
 label {
   display: block;
