@@ -81,6 +81,7 @@ main {
 label {
   display: block;
   margin: 8px 0;
+  max-width: 520px;
 }
 
 input,

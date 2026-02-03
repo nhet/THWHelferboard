@@ -12,22 +12,29 @@
   <label>Nachname<br>
     <input name="last_name" required value="{{ helper.last_name if helper else '' }}" />
   </label>
-  <label>Gruppe<br>
-    <select name="group_id" required>
-      {% for g in groups %}
-        <option value="{{g.id}}" {% if helper and helper.group_id == g.id %}selected{% endif %}>{{ g.name }}</option>
-      {% endfor %}
-    </select>
-  </label>
+
+    <label>Gruppe<br>
+      <select id="group-select" name="group_id" required placeholder="Bitte wählen...">
+        <option value=""></option>
+        {% for g in groups %}
+          <option value="{{g.id}}" {% if helper and helper.group_id == g.id %}selected{% endif %}>{{ g.name }}</option>
+        {% endfor %}
+      </select>
+      <div class="error-message">Bitte wählen Sie eine Gruppe aus</div>
+    </label>
+
+
   <label>Hauptfunktion<br>
-    <select name="main_function_id" required>
+    <select id="main-function-select" name="main_function_id" required placeholder="Bitte wählen...">
+      <option value=""></option>
       {% for f in functions %}
         <option value="{{f.id}}" {% if helper and helper.main_function_id == f.id %}selected{% endif %}>{{ f.name }}</option>
       {% endfor %}
     </select>
+    <div class="error-message">Bitte wählen Sie eine Hauptfunktion aus</div>
   </label>
-  <label>Nebenfunktionen (Mehrfachauswahl; STRG/CMD halten)<br>
-    <select id="secondary" multiple size="6">
+  <label>Nebenfunktionen<br>
+    <select id="secondary-select" multiple>
       {% for f in functions %}
         <option value="{{f.id}}" {% if helper and f in helper.secondary_functions %}selected{% endif %}>{{ f.name }}</option>
       {% endfor %}
@@ -37,15 +44,98 @@
     <input type="file" name="photo" accept="image/*" />
   </label>
   <input type="hidden" name="secondary_function_ids" id="secondary_function_ids" value="{{ sec_ids if sec_ids else '' }}" />
+  <link href="{{ url_for('static', path='tom-select.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', path='tom-select.complete.min.js') }}"></script>
   <script>
-    const sel = document.getElementById('secondary');
-    const hidden = document.getElementById('secondary_function_ids');
-    function updateHidden(){
-      const vals = Array.from(sel.selectedOptions).map(o => o.value);
-      hidden.value = vals.join(',');
-    }
-    sel.addEventListener('change', updateHidden);
-    updateHidden();
+    document.addEventListener('DOMContentLoaded', function() 
+    {
+      
+      const secondary_functionsTS = new TomSelect("#secondary-select",
+      {
+          plugins: ['remove_button'],
+          create: false,
+          render: {
+              no_results: function(data, escape) 
+              {
+                  return '<div class="no-results">Keine Ergebnisse für "' + escape(data.input) + '" gefunden</div>';
+              },
+              option_create: function(data, escape) 
+              {
+                  return '<div class="create">Hinzufügen <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+              },
+          },
+      });
+      secondary_functionsTS.on('change', (value) => {
+        document.getElementById('secondary_function_ids').value = value.join(',');
+      });
+
+      const mainFunc = new TomSelect("#main-function-select",{
+        create: false,
+        allowEmptyOption: false,
+        sortField: {
+          field: "text",
+          direction: "asc"
+        },
+        render: {
+              no_results: function(data, escape) 
+              {
+                  return '<div class="no-results">Keine Ergebnisse für "' + escape(data.input) + '" gefunden</div>';
+              },
+              option_create: function(data, escape) 
+              {
+                  return '<div class="create">Hinzufügen <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+              },
+          },
+      });
+
+      const group = new TomSelect("#group-select",{
+        create: false,
+        allowEmptyOption: false,
+        sortField: {
+          field: "text",
+          direction: "asc"
+        },
+        render: {
+              no_results: function(data, escape) 
+              {
+                  return '<div class="no-results">Keine Ergebnisse für "' + escape(data.input) + '" gefunden</div>';
+              },
+              option_create: function(data, escape) 
+              {
+                  return '<div class="create">Hinzufügen <strong>' + escape(data.input) + '</strong>&hellip;</div>';
+              },
+          },
+      });
+
+      const form = document.querySelector('form');
+      form.addEventListener('submit', function(e) {
+        let isValid = true;
+        if (!group.getValue()) {
+          group.wrapper.classList.add('is-invalid');
+          isValid = false;
+        }
+        if (!mainFunc.getValue()) {
+            mainFunc.wrapper.classList.add('is-invalid');
+            isValid = false;
+        }
+        if (!isValid) {
+            e.preventDefault();
+        }
+      });
+      
+      group.on('change', () => {
+       if (group.getValue()) 
+       {
+          group.wrapper.classList.remove('is-invalid');
+       }
+      });
+
+      mainFunc.on('change', () => {
+        if (mainFunc.getValue()) {
+            mainFunc.wrapper.classList.remove('is-invalid');
+        }
+      });
+    });
   </script>
     <div class="form-actions">
     <button class="btn" type="submit">Speichern</button>
