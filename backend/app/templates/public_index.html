@@ -84,91 +84,59 @@
 {% endif %}
 {% if incognito_level < 2 %}
 <script>
-  // Vertical page scroll
-  let scrollingDown = true;
-  let scrollSpeed = 1; // Pixel pro Schritt
-  let scrollInterval = 50; // ms zwischen Schritten
-
-  function autoScroll() {
-    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const currentScroll = window.pageYOffset;
-
-    if (scrollingDown) {
-      if (currentScroll < scrollHeight) {
-        window.scrollBy(0, scrollSpeed);
-      } else {
-        scrollingDown = false;
-      }
-    } else {
-      if (currentScroll > 0) {
-        window.scrollBy(0, -scrollSpeed);
-      } else {
-        scrollingDown = true;
-      }
-    }
-  }
-
-  // setInterval(autoScroll, scrollInterval);
-
   // Horizontal group sliders
   document.addEventListener('DOMContentLoaded', () => {
     const scrollableGrids = Array.from(document.querySelectorAll('.helper-grid')).filter(grid => grid.children.length > 9);
 
     if (scrollableGrids.length > 0) {
       let scrollingForward = true;
-      let cycleCompleted = false;
+      let cycleCount = 0;
       const hScrollSpeed = 1;
-      const hScrollInterval = 30; // ms
-      const scrollWait = 5000; 
-      let isWaiting = true;
+      const hScrollInterval = 30;
 
       setTimeout(() => {
-        isWaiting = false;
-      }, scrollWait);
+        function synchronizedHorizontalScroll() {
+          if (scrollingForward) {
+            const canScrollForward = scrollableGrids.some(
+              grid => grid.scrollLeft < grid.scrollWidth - grid.clientWidth - 1
+            );
 
-      function synchronizedHorizontalScroll() {
-        if (isWaiting) return;
-
-        if (scrollingForward) {
-          let canStillScroll = false;
-          scrollableGrids.forEach(grid => {
-            // Check if there is space to scroll
-            if (grid.scrollLeft < grid.scrollWidth - grid.clientWidth) {
-              grid.scrollLeft += hScrollSpeed;
-              canStillScroll = true;
+            if (canScrollForward) {
+              scrollableGrids.forEach(grid => {
+                grid.scrollLeft += hScrollSpeed;
+              });
+            } else {
+              setTimeout(() => {
+                scrollingForward = false;
+              }, 5000);
             }
-          });
-          if (!canStillScroll) {
-            scrollingForward = false;
-            isWaiting = true;
-            setTimeout(() => { isWaiting = false; }, scrollWait);
-          }
-        } else { // scrolling back
-          let canStillScroll = false;
-          scrollableGrids.forEach(grid => {
-            if (grid.scrollLeft > 0) {
-              grid.scrollLeft -= hScrollSpeed;
-              canStillScroll = true;
-            }
-          });
-          if (!canStillScroll) {
-            scrollingForward = true;
-            isWaiting = true;
-            setTimeout(() => { isWaiting = false; }, scrollWait);
+          } else {
+            const canScrollBackward = scrollableGrids.some(
+              grid => grid.scrollLeft > 1
+            );
 
-            if (!cycleCompleted) {
-              const event = new CustomEvent('sliderCycleComplete');
-              window.dispatchEvent(event);
-              cycleCompleted = true;
+            if (canScrollBackward) {
+              scrollableGrids.forEach(grid => {
+                grid.scrollLeft -= hScrollSpeed;
+              });
+            } else {
+              setTimeout(() => {
+                scrollingForward = true;
+                cycleCount++;
+
+                if (cycleCount >= 2) {
+                  switchPage();
+                  return;
+                }
+              }, 5000);
             }
           }
         }
-      }
 
-      setInterval(synchronizedHorizontalScroll, hScrollInterval);
+        const intervalId = setInterval(synchronizedHorizontalScroll, hScrollInterval);
+      }, 5000);
     } else {
-        const event = new CustomEvent('noSliders');
-        window.dispatchEvent(event);
+      setTimeout(switchPage, 30000);
     }
   });
 </script>

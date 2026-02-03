@@ -504,7 +504,7 @@ async def import_functions_from_csv(
                 func.name = name
             else:
                 # Create new function
-                func = Function(id=func_id, name=name)
+                func = Function(id=func_id, name=name, legend_name=name, short_name=name)
                 db.add(func)
 
         except (ValueError, IndexError) as e:
@@ -607,7 +607,7 @@ async def import_helpers_from_csv(
         content_as_string = content.decode('utf-8')
         reader = csv.reader(io.StringIO(content_as_string))
         header = next(reader)
-        expected_header = ['Vorname', 'Nachname', 'GruppenID', 'Hauptfunktion']
+        expected_header = ['Vorname', 'Nachname', 'GruppenID', 'Hauptfunktion', 'Zusatzfunktion I', 'Zusatzfunktion II', 'Zusatzfunktion III']
         if header != expected_header:
              raise HTTPException(status_code=400, detail=f"Falscher Spaltenaufbau. Erwartet: {','.join(expected_header)}. Gefunden: {','.join(header)}")
     except Exception as e:
@@ -618,9 +618,12 @@ async def import_helpers_from_csv(
 
     for row in reader:
         try:
-            first_name, last_name, group_id_str, main_function_id = row
+            first_name, last_name, group_id_str, main_function_id, zusatz1_str, zusatz2_str, zusatz3_str = row
             group_id = int(group_id_str)
             main_function_id = int(main_function_id)
+            zusatz1_id = int(zusatz1_str) if zusatz1_str.isdigit() else None
+            zusatz2_id = int(zusatz2_str) if zusatz2_str.isdigit() else None
+            zusatz3_id = int(zusatz3_str) if zusatz3_str.isdigit() else None
             
             if group_id not in groups_map:
                 print(f"Skipping row: Group with ID {group_id} not found. Row: {row}")
@@ -630,15 +633,44 @@ async def import_helpers_from_csv(
                 print(f"Skipping row: Function with id '{main_function_id} ' not found. Row: {row}")
                 continue
 
-            # Create new helper
-            helper = Helper(
-                first_name=first_name,
-                last_name=last_name,
-                group_id=group_id,
-                main_function_id=main_function_id
-            )
-            db.add(helper)
+            if zusatz1_id and zusatz1_id not in functions_map:
+                print(f"Skipping row: Function with id '{zusatz1_id}' not found. Row: {row}")
+                continue
 
+            if zusatz2_id and zusatz2_id not in functions_map:
+                print(f"Skipping row: Function with id '{zusatz2_id}' not found. Row: {row}")
+                continue
+
+            if zusatz3_id and zusatz3_id not in functions_map:
+                print(f"Skipping row: Function with id '{zusatz3_id}' not found. Row: {row}")
+                continue
+
+            if zusatz1_id or zusatz2_id or zusatz3_id:
+                zusatzfunktionen = [z for z in [zusatz1_id, zusatz2_id, zusatz3_id] if z]
+            else:
+                zusatzfunktionen = []
+
+            helper = db.query(Helper).filter(Helper.first_name == first_name, Helper.last_name == last_name).first()
+            if not helper:
+                helper = Helper(
+                    first_name=first_name,
+                    last_name=last_name,
+                    group_id=group_id,
+                    main_function_id=main_function_id
+                )
+                db.add(helper)
+                db.flush()
+            else:
+                helper.group_id = group_id
+                helper.main_function_id = main_function_id
+            
+            if zusatzfunktionen:
+                secondary_functions = db.query(Function).filter(Function.id.in_(zusatzfunktionen)).all()
+                helper.secondary_functions = secondary_functions
+            else:
+                helper.secondary_functions = []
+            
+            db.commit()
         except (ValueError, IndexError) as e:
             print(f"Skipping row due to error: {row}, {e}")
             continue

@@ -21,61 +21,183 @@
   {% endif %} 
   {% if helpers_by_function %}
   <div class="group-helpers_detail">
-    {% for function, helpers in helpers_by_function %}
-    <div class="function-group_detail">
-      <h3>
-        {{ function.name }} {% if function and function.emblem_svg_path %}
-        <img
-          height="30px"
-          src="{{ url_for('static', path=function.emblem_svg_path) }}"
-          alt="Dienststellungskennzeichen-{{ function.name }}"
-        />
-        {% endif %}
-      </h3>
-      <div class="helpers-row_detail">
-        {% for helper in helpers %}
-        <div class="helper-card_detail">
-          <div class="helper-photo">
-            {% if helper.photo_path %}
-            <img
-              src="{{ url_for('static', path=helper.photo_path) }}"
-              alt="{{ helper.first_name }} {{ helper.last_name }}"
-            />
-            {% else %}
-            <img
-              src="{{ url_for('static', path='placeholder-photo.svg') }}"
-              alt="Platzhalterbild"
-            />
-            {% endif %}
-          </div>
-          <div class="helper-name_detail">
-            <div class="helper-name fn">
-              {% if incognito_level >= 1 %}
-                {{ helper.first_name[0] }}.
-              {% else %}
-                {{ helper.first_name }}
-              {% endif %}
+    {% set functions_list = helpers_by_function | list %}
+    {% for i in range(0, functions_list|length, 2) %}
+      {% set func1 = functions_list[i] %}
+      {% set func2 = functions_list[i+1] if i+1 < functions_list|length else none %}
+      {% if func2 and func1[1]|length == 1 and func2[1]|length == 1 %}
+        <div class="function-pair">
+          {% for func, helpers in [func1, func2] %}
+            <div class="function-group_detail">
+              <h3>
+                {{ func.name }} {% if func and func.emblem_svg_path %}
+                <img
+                  height="30px"
+                  src="{{ url_for('static', path=func.emblem_svg_path) }}"
+                  alt="Dienststellungskennzeichen-{{ func.name }}"
+                />
+                {% endif %}
+              </h3>
+              <div class="helpers-row_detail">
+                {% for helper in helpers %}
+                <div class="helper-card_detail">
+                  <div class="helper-photo">
+                    {% if helper.photo_path %}
+                    <img
+                      src="{{ url_for('static', path=helper.photo_path) }}"
+                      alt="{{ helper.first_name }} {{ helper.last_name }}"
+                    />
+                    {% else %}
+                    <img
+                      src="{{ url_for('static', path='placeholder-photo.svg') }}"
+                      alt="Platzhalterbild"
+                    />
+                    {% endif %}
+                  </div>
+                  <div class="helper-name_detail">
+                    <div class="helper-name fn">
+                      {% if incognito_level >= 1 %}
+                        {{ helper.first_name[0] }}.
+                      {% else %}
+                        {{ helper.first_name }}
+                      {% endif %}
+                    </div>
+                    <div class="helper-name ln">
+                      {% if incognito_level >= 1 %}
+                        {{ helper.last_name[0] }}.
+                      {% else %}
+                        {{ helper.last_name }}
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="helper-functions_detail">
+                    {% if helper.secondary_functions %}
+                    <span class="secondary-functions_detail">
+                      ({{ helper.secondary_functions | map(attribute='legend_name') |
+                      join(', ') }})
+                    </span>
+                    {% endif %}
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
             </div>
-            <div class="helper-name ln">
-              {% if incognito_level >= 1 %}
-                {{ helper.last_name[0] }}.
-              {% else %}
-                {{ helper.last_name }}
-              {% endif %}
-            </div>          
-          </div>
-          <div class="helper-functions_detail">            
-            {% if helper.secondary_functions %}
-            <span class="secondary-functions_detail">
-              ({{ helper.secondary_functions | map(attribute='legend_name') |
-              join(', ') }})
-            </span>
-            {% endif %}
-          </div>
+          {% endfor %}
         </div>
+      {% else %}
+        {% for func, helpers in [func1] %}
+          <div class="function-group_detail">
+            <h3>
+              {{ func.name }} {% if func and func.emblem_svg_path %}
+              <img
+                height="30px"
+                src="{{ url_for('static', path=func.emblem_svg_path) }}"
+                alt="Dienststellungskennzeichen-{{ func.name }}"
+              />
+              {% endif %}
+            </h3>
+            <div class="helpers-row_detail">
+              {% for helper in helpers %}
+              <div class="helper-card_detail">
+                <div class="helper-photo">
+                  {% if helper.photo_path %}
+                  <img
+                    src="{{ url_for('static', path=helper.photo_path) }}"
+                    alt="{{ helper.first_name }} {{ helper.last_name }}"
+                  />
+                  {% else %}
+                  <img
+                    src="{{ url_for('static', path='placeholder-photo.svg') }}"
+                    alt="Platzhalterbild"
+                  />
+                  {% endif %}
+                </div>
+                <div class="helper-name_detail">
+                  <div class="helper-name fn">
+                    {% if incognito_level >= 1 %}
+                      {{ helper.first_name[0] }}.
+                    {% else %}
+                      {{ helper.first_name }}
+                    {% endif %}
+                  </div>
+                  <div class="helper-name ln">
+                    {% if incognito_level >= 1 %}
+                      {{ helper.last_name[0] }}.
+                    {% else %}
+                      {{ helper.last_name }}
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="helper-functions_detail">
+                  {% if helper.secondary_functions %}
+                  <span class="secondary-functions_detail">
+                    ({{ helper.secondary_functions | map(attribute='legend_name') |
+                    join(', ') }})
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
         {% endfor %}
-      </div>
-    </div>
+        {% if func2 %}
+          <div class="function-group_detail">
+            <h3>
+              {{ func2[0].name }} {% if func2[0] and func2[0].emblem_svg_path %}
+              <img
+                height="30px"
+                src="{{ url_for('static', path=func2[0].emblem_svg_path) }}"
+                alt="Dienststellungskennzeichen-{{ func2[0].name }}"
+              />
+              {% endif %}
+            </h3>
+            <div class="helpers-row_detail">
+              {% for helper in func2[1] %}
+              <div class="helper-card_detail">
+                <div class="helper-photo">
+                  {% if helper.photo_path %}
+                  <img
+                    src="{{ url_for('static', path=helper.photo_path) }}"
+                    alt="{{ helper.first_name }} {{ helper.last_name }}"
+                  />
+                  {% else %}
+                  <img
+                    src="{{ url_for('static', path='placeholder-photo.svg') }}"
+                    alt="Platzhalterbild"
+                  />
+                  {% endif %}
+                </div>
+                <div class="helper-name_detail">
+                  <div class="helper-name fn">
+                    {% if incognito_level >= 1 %}
+                      {{ helper.first_name[0] }}.
+                    {% else %}
+                      {{ helper.first_name }}
+                    {% endif %}
+                  </div>
+                  <div class="helper-name ln">
+                    {% if incognito_level >= 1 %}
+                      {{ helper.last_name[0] }}.
+                    {% else %}
+                      {{ helper.last_name }}
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="helper-functions_detail">
+                  {% if helper.secondary_functions %}
+                  <span class="secondary-functions_detail">
+                    ({{ helper.secondary_functions | map(attribute='legend_name') |
+                    join(', ') }})
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
     {% endfor %}
   </div>
   {% endif %}

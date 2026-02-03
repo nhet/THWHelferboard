@@ -5,7 +5,7 @@
 <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
     <a class="btn" href="/admin/helpers/new">+ Neuer Helfer</a>
     <form action="/admin/helpers/import_csv" method="post" enctype="multipart/form-data" onsubmit="return confirm('Bestehende Helfer mit gleichem Vor-/Nachnamen werden überschrieben. Fortfahren?')">
-        <label for="csv_file">CSV-Import (Vorname,Nachname,GruppenID,HauptfunktionID):</label>
+        <label for="csv_file">CSV-Import ('Vorname', 'Nachname', 'GruppenID', 'Hauptfunktion', 'Zusatzfunktion I', 'Zusatzfunktion II', 'Zusatzfunktion III'):</label>
         <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
         <button type="submit" class="btn">Importieren</button>
     </form>
