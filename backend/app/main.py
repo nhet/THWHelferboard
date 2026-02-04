@@ -427,7 +427,8 @@ def group_edit(group_id: int, request: Request, db: Session = Depends(get_db)):
     if not g:
         raise HTTPException(404)
     parents = db.query(Group).filter(Group.id != group_id).order_by(Group.sort_order.asc(), Group.name.asc()).all()
-    return templates.TemplateResponse("admin/groups_form.html", {"request": request, "group": g, "parents": parents})
+    helpers = db.query(Helper).filter(Helper.group_id == group_id).all()
+    return templates.TemplateResponse("admin/groups_form.html", {"request": request, "group": g, "parents": parents, "helpers": helpers})
 
 @app.post("/admin/groups/save")
 async def group_save(

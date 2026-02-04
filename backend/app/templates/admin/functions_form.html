@@ -40,5 +40,7 @@
     </div>
   </form>
   <hr/>  
-  {% include 'admin/helpers/helpers-table.html' %}
+  {% if func %}
+    {% include 'admin/helpers/helpers-table.html' %}
+  {% endif %}
 {% endblock %}

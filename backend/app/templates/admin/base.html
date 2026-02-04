@@ -153,6 +153,9 @@
           var match = !query || text.indexOf(query) !== -1;
           r.style.display = match ? '' : 'none';
         });
+        const visibleRows = Array.from(document.querySelectorAll('table tr')).filter(tr => tr.checkVisibility());
+        const element = document.getElementById('filtertedItems');
+        element.textContent = '' + (visibleRows.length - 1) + '';
       }
 
       function initTableTools() {
