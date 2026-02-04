@@ -1,0 +1,27 @@
+<div class="table-toolbar" style="margin-bottom:0.5rem; display:flex; gap:8px; align-items:center;">
+  <div class="table-filter-wrapper">
+    <input class="table-filter" placeholder="Filter (alle Spalten)" aria-label="Filter Helfer" />
+    <button type="button" class="table-filter-reset hidden" aria-label="Filter zurücksetzen" title="Filter zurücksetzen">✖</button>
+  </div>
+</div>
+<table class="list-table">
+  <thead>
+    <tr><th>ID</th><th>Name</th><th>Gruppe</th><th>Hauptfunktion</th><th class="no-sort">Aktionen</th></tr>
+  </thead>
+  <tbody>
+    {% for h in helpers %}
+      <tr data-href="/admin/helpers/{{ h.id }}" tabindex="0">
+        <td>{{ h.id }}</td>
+        <td>{{ h.first_name }} {{ h.last_name }}</td>
+        <td>{{ h.group.name }}</td>
+        <td>{{ h.main_function.name }}</td>
+        <td>
+          <a class="btn" href="/admin/helpers/{{ h.id }}">Bearbeiten</a>
+          <form method="post" action="/admin/helpers/{{ h.id }}/delete" style="display:inline" onsubmit="return confirm('Löschen?')">
+            <button class="btn danger" type="submit">Löschen</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

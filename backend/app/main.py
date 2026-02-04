@@ -20,7 +20,7 @@ from sqlalchemy.orm import joinedload
 from fastapi.templating import Jinja2Templates
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.status import HTTP_303_SEE_OTHER
-from sqlalchemy import text, exists
+from sqlalchemy import or_, text, exists
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func as sa_func
 
@@ -530,7 +530,10 @@ def function_edit(func_id: int, request: Request, db: Session = Depends(get_db))
     f = db.query(Function).get(func_id)
     if not f:
         raise HTTPException(404)
-    return templates.TemplateResponse("admin/functions_form.html", {"request": request, "func": f})
+    helpers = db.query(Helper).filter(
+        or_(Helper.main_function_id == func_id,
+            Helper.secondary_functions.any(Function.id == func_id))).all()
+    return templates.TemplateResponse("admin/functions_form.html", {"request": request, "func": f, "helpers": helpers})
 
 @app.post("/admin/functions/save")
 async def function_save(

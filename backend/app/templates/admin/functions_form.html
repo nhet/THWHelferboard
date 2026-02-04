@@ -1,33 +1,44 @@
 
 {% extends 'admin/base.html' %}
 {% block admin_content %}
-<h2>{% if func %}Funktion bearbeiten{% else %}Neue Funktion{% endif %}</h2>
-<form method="post" action="/admin/functions/save" enctype="multipart/form-data">
-  {% if func %}<input type="hidden" name="id" value="{{ func.id }}" />{% endif %}
-  <label>Bezeichnung<br>
-    <input name="name" required value="{{ func.name if func else '' }}" />
-  </label>
-  <label>Kurzbezeichnung<br>
-    <input name="short_name" value="{{ func.short_name if func else '' }}" />
-  </label>
-  <label>Legendenbezeichnung<br>
-    <input name="legend_name" value="{{ func.legend_name if func else '' }}" />
-  </label>
-  <label>Sortierung<br>
-    <input type="number" name="sort_order" value="{{ func.sort_order if func else 0 }}" />
-  </label>
-  <label>Dienststellungskennzeichen (SVG)<br>
-    <input type="file" name="emblem" accept="image/svg+xml" />
-  </label>
-  {% if func and func.emblem_svg_path %}
-    <p><img src="{{ url_for('static', path=func.emblem_svg_path) }}" style="height:48px"/>
-    <label style="display:flex;align-items:left;gap:8px;margin-top:6px;">
-      <input class="checkbox" type="checkbox" name="delete_emblem" value="1"/> Emblem löschen
-    </label></p>
-  {% endif %}
-  <div class="form-actions">
-    <button class="btn" type="submit">Speichern</button>
-    <a class="btn" href="/admin/functions">Abbrechen</a>
-  </div>
-</form>
+  <h2>
+    {% if func %}
+      Funktion bearbeiten
+      <form method="post" action="/admin/functions/{{ func.id }}/delete" style="display:inline" onsubmit="return confirm('Löschen?')">
+        <button class="btn danger" type="submit">Löschen</button>
+      </form> 
+    {% else %}
+      Neue Funktion
+    {% endif %}
+  </h2>
+  <form method="post" action="/admin/functions/save" enctype="multipart/form-data">
+    {% if func %}<input type="hidden" name="id" value="{{ func.id }}" />{% endif %}
+    <label>Bezeichnung<br>
+      <input name="name" required value="{{ func.name if func else '' }}" />
+    </label>
+    <label>Kurzbezeichnung<br>
+      <input name="short_name" value="{{ func.short_name if func else '' }}" />
+    </label>
+    <label>Legendenbezeichnung<br>
+      <input name="legend_name" value="{{ func.legend_name if func else '' }}" />
+    </label>
+    <label>Sortierung<br>
+      <input type="number" name="sort_order" value="{{ func.sort_order if func else 0 }}" />
+    </label>
+    <label>Dienststellungskennzeichen (SVG)<br>
+      <input type="file" name="emblem" accept="image/svg+xml" />
+    </label>
+    {% if func and func.emblem_svg_path %}
+      <p><img src="{{ url_for('static', path=func.emblem_svg_path) }}" style="height:48px"/>
+      <label style="display:flex;align-items:left;gap:8px;margin-top:6px;">
+        <input class="checkbox" type="checkbox" name="delete_emblem" value="1"/> Emblem löschen
+      </label></p>
+    {% endif %}
+    <div class="form-actions">
+      <button class="btn" type="submit">Speichern</button>
+      <a class="btn" href="/admin/functions">Abbrechen</a>
+    </div>
+  </form>
+  <hr/>  
+  {% include 'admin/helpers/helpers-table.html' %}
 {% endblock %}
