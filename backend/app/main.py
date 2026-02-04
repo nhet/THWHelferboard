@@ -159,6 +159,17 @@ def get_used_functions(db: Session) -> List[Function]:
 async def favicon():
     return FileResponse(static_dir / "favicon.ico")
 
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    if exc.status_code == 400 or exc.status_code == 404 or exc.status_code == 500:
+        return templates.TemplateResponse("admin/error.html", {
+            "request": request,
+            "detail": exc.detail
+        }, status_code=exc.status_code)
+    
+    # Optional: Andere Fehler standardmäßig behandeln
+    return HTMLResponse(content=str(exc.detail), status_code=exc.status_code)
+
 @app.get("/", response_class=HTMLResponse)
 def public_index(request: Request, db: Session = Depends(get_db)):
     incognito_level = get_incognito_level(db)
@@ -459,6 +470,13 @@ async def group_save(
 @app.post("/admin/groups/{group_id}/delete")
 async def group_delete(group_id: int, db: Session = Depends(get_db)):
     g = db.query(Group).get(group_id)
+    if not g:
+        raise HTTPException(404)
+    child_count = db.query(Group).filter(Group.parent_id == group_id).count()
+    helper_count = db.query(Helper).filter(Helper.group_id == group_id).count()
+    if child_count > 0 or helper_count > 0:
+        raise HTTPException(status_code=400, detail="Gruppe kann nicht gelöscht werden: Es existieren Untergruppen oder Helfer sind zugewiesen.")
+
     if g:
         # Delete associated upload directory
         group_upload_dir = static_dir / "uploads" / "groups" / str(g.id)

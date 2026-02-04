@@ -1,0 +1,8 @@
+{% extends "admin/base.html" %}
+{% block admin_content %}
+<div class="error-container">
+    <h2>Ups! Da lief etwas schief</h2>
+    <p class="error-message">{{ detail }}</p>
+    <a href="javascript:history.back()" class="btn">Zurück zum Formular</a>
+</div>
+{% endblock %}
