@@ -419,6 +419,83 @@ select {
   animation: none;
 }
 
+/* ===== Carousel Large (Public Index) ===== */
+.carousel-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  margin-top: 12px;
+  text-align: center;
+}
+.carousel-container-large {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 40px;
+  padding: 20px;
+}
+
+.carousel-large {
+  position: relative;
+  width: 800px;
+  height: 1600px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.carousel-large.single-image .carousel-item-large {
+  opacity: 1;
+  animation: none;
+}
+
+.carousel-item-large {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+
+.carousel-large:not(.single-image) .carousel-item-large {
+  animation-name: fade-large;
+  animation-duration: calc(var(--total-slides) * 4s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-delay: calc(var(--animation-delay, 0) * 4s);
+}
+
+.carousel-item-large img.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(20px);
+  transform: scale(1.1);
+  opacity: 0.8;
+}
+
+.carousel-item-large img.fg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+@keyframes fade-large {
+  0%,
+  20% {
+    opacity: 1;
+  }
+  20.5%,
+  100% {
+    opacity: 0;
+  }
+}
+
 /* ===== Legende CSS ===== */
 .legende {
   position: absolute;

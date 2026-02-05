@@ -13,7 +13,7 @@
           {% for img in carousel_images %}
             <div class="carousel-item-large"
               {% if total > 1 %}
-                style="--total-slides: {{ total }}; animation-delay: {{ loop.index0 * 4 }}s;"
+                style="--total-slides: {{ total }}; --animation-delay: {{ loop.index0 }};"
               {% endif %}>
               <img class="bg" src="{{ url_for('static', path=img.path) }}" alt="">
               <img class="fg" src="{{ url_for('static', path=img.path) }}" alt="">
