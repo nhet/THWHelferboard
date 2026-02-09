@@ -15,8 +15,14 @@
               {% if total > 1 %}
                 style="--total-slides: {{ total }}; --animation-delay: {{ loop.index0 }};"
               {% endif %}>
-              <img class="bg" src="{{ url_for('static', path=img.path) }}" alt="">
-              <img class="fg" src="{{ url_for('static', path=img.path) }}" alt="">
+              <!-- Low-res background for very fast load -->
+              <img class="bg" src="{{ url_for('static', path=img.path.replace('.jpg', '-thumb-sm.webp').replace('.jpeg', '-thumb-sm.webp').replace('.png', '-thumb-sm.webp')) }}" alt="">
+              <!-- Optimized carousel image (max 1000px) -->
+              <picture class="fg">
+                <source srcset="{{ url_for('static', path=img.path.replace('.jpg', '-carousel.webp').replace('.jpeg', '-carousel.webp').replace('.png', '-carousel.webp')) }}" type="image/webp">
+                <source srcset="{{ url_for('static', path=img.path.replace('.jpg', '-carousel.avif').replace('.jpeg', '-carousel.avif').replace('.png', '-carousel.avif')) }}" type="image/avif">
+                <img src="{{ url_for('static', path=img.path) }}" alt="">
+              </picture>
             </div>
           {% endfor %}
         </div>
@@ -45,13 +51,25 @@
     <div class="group-section" style="--indent: 0px">
       <h2 class="group-title">{{ node.group.name }} ({{node.helpers|length}})</h2>
       <div class="helper-grid">
+        <div class="helper-track">
         {% for h in node.helpers %}
           <div class="helper-card">
             <div class="helper-photo">
               {% if h.photo_path %}
-                <img src="{{ url_for('static', path=h.photo_path) }}" alt="{{h.first_name}} {{h.last_name}}" />
+                <picture>
+                  <source srcset="{{ url_for('static', path=h.photo_path.replace('.jpg', '-thumb-sm.webp').replace('.jpeg', '-thumb-sm.webp').replace('.png', '-thumb-sm.webp')) }} 1x, {{ url_for('static', path=h.photo_path.replace('.jpg', '-thumb-md.webp').replace('.jpeg', '-thumb-md.webp').replace('.png', '-thumb-md.webp')) }} 2x" type="image/webp">
+                  <source srcset="{{ url_for('static', path=h.photo_path.replace('.jpg', '-thumb-sm.avif').replace('.jpeg', '-thumb-sm.avif').replace('.png', '-thumb-sm.avif')) }} 1x, {{ url_for('static', path=h.photo_path.replace('.jpg', '-thumb-md.avif').replace('.jpeg', '-thumb-md.avif').replace('.png', '-thumb-md.avif')) }} 2x" type="image/avif">
+                  <img src="{{ url_for('static', path=h.photo_path.replace('.jpg', '-thumb-sm.jpg').replace('.jpeg', '-thumb-sm.jpg').replace('.png', '-thumb-sm.jpg')) }}"
+                       srcset="{{ url_for('static', path=h.photo_path.replace('.jpg', '-thumb-sm.jpg').replace('.jpeg', '-thumb-sm.jpg').replace('.png', '-thumb-sm.jpg')) }} 1x, {{ url_for('static', path=h.photo_path.replace('.jpg', '-thumb-md.jpg').replace('.jpeg', '-thumb-md.jpg').replace('.png', '-thumb-md.jpg')) }} 2x"
+                       sizes="110px"
+                       width="110" height="110"
+                       loading="lazy" decoding="async"
+                       alt="{{h.first_name}} {{h.last_name}}" />
+                </picture>
               {% else %}
-                <img src="{{ url_for('static', path='placeholder-photo.svg') }}" alt="Platzhalter" />
+                <img src="{{ url_for('static', path='placeholder-photo.svg') }}"
+                     width="110" height="110" loading="lazy" decoding="async"
+                     alt="Platzhalter" />
               {% endif %}
             </div>
             <div class="helper-name fn">
@@ -70,13 +88,14 @@
             </div>
             <div class="helper-emblem">
               {% if h.main_function and h.main_function.emblem_svg_path %}
-                <img src="{{ url_for('static', path=h.main_function.emblem_svg_path) }}" alt="Dienststellungskennzeichen-{{ h.main_function.name }}" />
+                <img src="{{ url_for('static', path=h.main_function.emblem_svg_path) }}" height="28" loading="lazy" decoding="async" alt="Dienststellungskennzeichen-{{ h.main_function.name }}" />
               {% else %}
                 <span class="no-emblem">–</span>
               {% endif %}
             </div>
           </div>
         {% endfor %}
+        </div>
       </div>
     </div>
   {% endfor %}
@@ -84,60 +103,109 @@
 {% endif %}
 {% if incognito_level < 2 %}
 <script>
-  // Horizontal group sliders
+  // Synchronized horizontal group sliders
   document.addEventListener('DOMContentLoaded', () => {
-    const scrollableGrids = Array.from(document.querySelectorAll('.helper-grid')).filter(grid => grid.children.length > 9);
+    const grids = Array.from(document.querySelectorAll('.helper-grid')).filter(g => g.querySelectorAll('.helper-card').length > 9);
 
-    if (scrollableGrids.length > 0) {
-      let scrollingForward = true;
-      let cycleCount = 0;
-      const hScrollSpeed = 1;
-      const hScrollInterval = 30;
-
-      setTimeout(() => {
-        function synchronizedHorizontalScroll() {
-          if (scrollingForward) {
-            const canScrollForward = scrollableGrids.some(
-              grid => grid.scrollLeft < grid.scrollWidth - grid.clientWidth - 1
-            );
-
-            if (canScrollForward) {
-              scrollableGrids.forEach(grid => {
-                grid.scrollLeft += hScrollSpeed;
-              });
-            } else {
-              setTimeout(() => {
-                scrollingForward = false;
-              }, 5000);
-            }
-          } else {
-            const canScrollBackward = scrollableGrids.some(
-              grid => grid.scrollLeft > 1
-            );
-
-            if (canScrollBackward) {
-              scrollableGrids.forEach(grid => {
-                grid.scrollLeft -= hScrollSpeed;
-              });
-            } else {
-              setTimeout(() => {
-                scrollingForward = true;
-                cycleCount++;
-
-                if (cycleCount >= 2) {
-                  switchPage();
-                  return;
-                }
-              }, 5000);
-            }
-          }
-        }
-
-        const intervalId = setInterval(synchronizedHorizontalScroll, hScrollInterval);
-      }, 5000);
-    } else {
+    if (grids.length === 0) {
       setTimeout(switchPage, 30000);
+      return;
     }
+
+    // Collect all tracks and their max offsets
+    const sliders = grids.map(grid => {
+      const track = grid.querySelector('.helper-track');
+      if (!track) return null;
+      
+      const maxOffset = Math.max(0, track.scrollWidth - grid.clientWidth);
+      if (maxOffset <= 1) return null;
+      
+      return { grid, track, maxOffset };
+    }).filter(s => s !== null);
+
+    if (sliders.length === 0) {
+      setTimeout(switchPage, 30000);
+      return;
+    }
+
+    // Global state for all sliders
+    const state = {
+      pos: 0,
+      direction: 1, // 1 forward, -1 backward
+      pxPerMs: 0.06,
+      paused: false,
+      lastTime: performance.now(),
+      rafId: null,
+      reachedEndCount: 0, // Track how many sliders reached their max
+      maxOffsetsReached: new Set() // Track which sliders have reached their end
+    };
+
+    function step(now) {
+      if (state.paused) return;
+
+      const dt = now - state.lastTime;
+      state.lastTime = now;
+      state.pos += state.direction * state.pxPerMs * dt;
+
+      // Check if any slider reached its max offset
+      state.reachedEndCount = 0;
+      sliders.forEach(slider => {
+        const canMove = state.pos <= slider.maxOffset;
+        if (!canMove) {
+          state.maxOffsetsReached.add(slider.track);
+          state.reachedEndCount++;
+        }
+      });
+
+      // If moving forward and all sliders reached their max, pause at end
+      if (state.direction === 1 && state.reachedEndCount === sliders.length) {
+        state.pos = Math.max(...sliders.map(s => s.maxOffset));
+        sliders.forEach(slider => {
+          slider.track.style.transform = `translate3d(${-Math.min(state.pos, slider.maxOffset)}px,0,0)`;
+        });
+        // Pause and reverse
+        state.paused = true;
+        setTimeout(() => {
+          state.paused = false;
+          state.direction = -1;
+          state.lastTime = performance.now();
+          state.maxOffsetsReached.clear();
+          state.rafId = requestAnimationFrame(step);
+        }, 5000);
+        return;
+      }
+
+      // If moving backward and reached start, pause and go forward again
+      if (state.direction === -1 && state.pos <= 0) {
+        state.pos = 0;
+        sliders.forEach(slider => {
+          slider.track.style.transform = `translate3d(0,0,0)`;
+        });
+        state.paused = true;
+        /*setTimeout(() => {
+          state.paused = false;
+          state.direction = 1;
+          state.lastTime = performance.now();
+          state.rafId = requestAnimationFrame(step);
+        }, 5000);*/
+        setTimeout(switchPage, 5000);
+        return;
+      }
+
+      // Update all sliders with current position (clamped to their individual max)
+      sliders.forEach(slider => {
+        const clampedPos = Math.min(state.pos, slider.maxOffset);
+        slider.track.style.transform = `translate3d(${-clampedPos}px,0,0)`;
+      });
+
+      state.rafId = requestAnimationFrame(step);
+    }
+
+    // Start after a short delay
+    setTimeout(() => {
+      state.lastTime = performance.now();
+      state.rafId = requestAnimationFrame(step);
+    }, 1000);
   });
 </script>
 {% endif %}

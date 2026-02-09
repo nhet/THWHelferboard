@@ -200,11 +200,9 @@ select {
 }
 
 .helper-grid {
-  display: flex;
-  overflow-x: auto;
+  display: block;
+  overflow: hidden; /* hide native scrolling, we animate via transform */
   gap: var(--gap);
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
 }
 
 .helper-grid::-webkit-scrollbar {
@@ -224,10 +222,16 @@ select {
   flex-shrink: 0;
 }
 
+.helper-track {
+  display: flex;
+  gap: var(--gap);
+  will-change: transform;
+  transform: translate3d(0,0,0);
+}
+
 .helper-photo {
   width: 100%;
   aspect-ratio: 1;
-  background: #f7f0ea;
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -238,7 +242,24 @@ select {
 .helper-photo img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.helper-photo picture {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.helper-photo picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
 }
 
 .placeholder {
@@ -333,9 +354,36 @@ select {
 }
 
 .helper-card_detail img {
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 6px;
   margin-bottom: 10px;
+}
+
+.helper-card_detail .helper-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.helper-card_detail .helper-photo img,
+.helper-card_detail .helper-photo picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.helper-card_detail .helper-photo picture {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .helper-card_detail .helper-name_detail {
@@ -390,13 +438,32 @@ select {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(20px);
-  transform: scale(1.1);
-  opacity: 0.8;
+  filter: blur(8px);
+  transform: scale(1.03);
+  opacity: 0.9;
 }
 
 .carousel-item img.fg {
   position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+/* Picture tag support */
+picture.fg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: contents;
+  z-index: 1;
+}
+
+picture.fg img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -471,9 +538,10 @@ select {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(20px);
-  transform: scale(1.1);
-  opacity: 0.8;
+  /* Removed heavy CSS blur for better performance on weak devices */
+  filter: none;
+  transform: scale(1.03);
+  opacity: 0.9;
 }
 
 .carousel-item-large img.fg {

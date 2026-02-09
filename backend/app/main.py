@@ -15,6 +15,7 @@ from fastapi import FastAPI, Request, Depends, Form, UploadFile, File, HTTPExcep
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
+from starlette.middleware.gzip import GZipMiddleware
 import itertools
 from sqlalchemy.orm import joinedload
 from fastapi.templating import Jinja2Templates
@@ -27,6 +28,7 @@ from sqlalchemy import select, func as sa_func
 from .database import Base, engine, get_db
 from .models import Group, Function, Helper, Setting, CarouselImage, GroupImage, helper_secondary_functions
 from .version import __version__
+from .image_processor import generate_thumbnails, delete_original_and_thumbnails
 
 class CacheStaticFiles(StaticFiles):
     def __init__(self, *args, **kwargs):
@@ -39,6 +41,9 @@ class CacheStaticFiles(StaticFiles):
         return response
 
 app = FastAPI(title="Helferboard")
+
+# Enable Gzip compression for responses >= 1000 bytes
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 BASE_DIR = Path(__file__).resolve().parent
 static_dir = BASE_DIR / "static"
@@ -131,6 +136,11 @@ def save_upload(upload: Optional[UploadFile], subdir: str) -> Optional[str]:
     out_path = target_dir / fname
     with out_path.open("wb") as f:
         f.write(upload.file.read())
+    
+    # Generate thumbnail variants if it's an image (not SVG)
+    if subdir != "uploads/emblems" and ext in {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}:
+        generate_thumbnails(out_path, static_dir)
+    
     return f"{subdir}/{fname}"
 
 def get_used_functions(db: Session) -> List[Function]:
@@ -276,13 +286,11 @@ async def upload_carousel(image: UploadFile = File(...), db: Session = Depends(g
 async def delete_carousel(img_id: int, db: Session = Depends(get_db)):
     img = db.query(CarouselImage).get(img_id)
     if img:
-        # Datei löschen
+        # Datei und Thumbnails löschen
         try:
-            p = static_dir / img.path
-            if p.exists():
-                p.unlink()
-        except:
-            pass
+            delete_original_and_thumbnails(Path(img.path), static_dir)
+        except Exception as e:
+            print(f"Error deleting carousel image: {e}")
         db.delete(img)
         set_last_update(db)
         db.commit()
@@ -345,13 +353,11 @@ async def upload_group_image(group_id: int, images: List[UploadFile] = File(...)
 async def delete_group_image(group_id: int, img_id: int, db: Session = Depends(get_db)):
     img = db.query(GroupImage).filter(GroupImage.id == img_id, GroupImage.group_id == group_id).first()
     if img:
-        # Datei löschen
+        # Datei und Thumbnails löschen
         try:
-            p = static_dir / img.path
-            if p.exists():
-                p.unlink()
-        except:
-            pass
+            delete_original_and_thumbnails(Path(img.path), static_dir)
+        except Exception as e:
+            print(f"Error deleting group image: {e}")
         db.delete(img)
         set_last_update(db)
         db.commit()
@@ -784,11 +790,9 @@ async def helper_delete_photo(helper_id: int, db: Session = Depends(get_db)):
     h = db.query(Helper).get(helper_id)
     if h and h.photo_path:
         try:
-            p = static_dir / h.photo_path
-            if p.exists():
-                p.unlink()
-        except Exception:
-            pass
+            delete_original_and_thumbnails(Path(h.photo_path), static_dir)
+        except Exception as e:
+            print(f"Error deleting helper photo: {e}")
         h.photo_path = None
         set_last_update(db)
         db.commit()
@@ -843,11 +847,9 @@ async def import_photos(zip_file: UploadFile = File(...), db: Session = Depends(
                         if helper.photo_path:
                             print(f"Lösche altes Foto: {helper.photo_path}")
                             try:
-                                p = static_dir / helper.photo_path
-                                if p.exists():
-                                    p.unlink()
-                            except Exception:
-                                pass
+                                delete_original_and_thumbnails(Path(helper.photo_path), static_dir)
+                            except Exception as e:
+                                print(f"Error deleting old photo: {e}")
                         if photo_path:
                             helper.photo_path = photo_path
                             updated_count += 1
@@ -869,4 +871,9 @@ def save_upload_from_path(file_path: Path, subdir: str) -> Optional[str]:
     out_path = target_dir / fname
     import shutil
     shutil.copy(file_path, out_path)
+    
+    # Generate thumbnail variants if it's an image (not SVG)
+    if subdir != "uploads/emblems" and ext in {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}:
+        generate_thumbnails(out_path, static_dir)
+    
     return f"{subdir}/{fname}"

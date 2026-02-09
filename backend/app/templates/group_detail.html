@@ -10,8 +10,14 @@
       <div class="carousel-item" {% if total>
         1 %}style="--total-slides: {{ total }}; animation-delay: {{ loop.index0
         * 4 }}s;"{% endif %}>
-        <img class="bg" src="{{ url_for('static', path=img.path) }}" alt="" />
-        <img class="fg" src="{{ url_for('static', path=img.path) }}" alt="" />
+        <!-- Low-res background for very fast load -->
+        <img class="bg" src="{{ url_for('static', path=img.path.replace('.jpg', '-thumb-sm.webp').replace('.jpeg', '-thumb-sm.webp').replace('.png', '-thumb-sm.webp')) }}" alt="">
+        <!-- Optimized carousel image (max 1000px) -->
+        <picture class="fg">
+          <source srcset="{{ url_for('static', path=img.path.replace('.jpg', '-carousel.webp').replace('.jpeg', '-carousel.webp').replace('.png', '-carousel.webp')) }}" type="image/webp">
+          <source srcset="{{ url_for('static', path=img.path.replace('.jpg', '-carousel.avif').replace('.jpeg', '-carousel.avif').replace('.png', '-carousel.avif')) }}" type="image/avif">
+          <img src="{{ url_for('static', path=img.path) }}" alt="">
+        </picture>
       </div>
       {% endfor %}
     </div>
@@ -43,13 +49,21 @@
                 <div class="helper-card_detail">
                   <div class="helper-photo">
                     {% if helper.photo_path %}
-                    <img
-                      src="{{ url_for('static', path=helper.photo_path) }}"
-                      alt="{{ helper.first_name }} {{ helper.last_name }}"
-                    />
+                    <picture>
+                      <source srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.webp').replace('.jpeg', '-thumb-detail.webp').replace('.png', '-thumb-detail.webp')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.webp').replace('.jpeg', '-thumb-detail-2x.webp').replace('.png', '-thumb-detail-2x.webp')) }} 2x" type="image/webp">
+                      <source srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.avif').replace('.jpeg', '-thumb-detail.avif').replace('.png', '-thumb-detail.avif')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.avif').replace('.jpeg', '-thumb-detail-2x.avif').replace('.png', '-thumb-detail-2x.avif')) }} 2x" type="image/avif">
+                      <img src="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.jpg').replace('.jpeg', '-thumb-detail.jpg').replace('.png', '-thumb-detail.jpg')) }}"
+                           srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.jpg').replace('.jpeg', '-thumb-detail.jpg').replace('.png', '-thumb-detail.jpg')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.jpg').replace('.jpeg', '-thumb-detail-2x.jpg').replace('.png', '-thumb-detail-2x.jpg')) }} 2x"
+                           sizes="165px"
+                           width="165" height="165"
+                           loading="lazy" decoding="async"
+                           alt="{{ helper.first_name }} {{ helper.last_name }}" />
+                    </picture>
                     {% else %}
                     <img
                       src="{{ url_for('static', path='placeholder-photo.svg') }}"
+                      width="165" height="165"
+                      loading="lazy" decoding="async"
                       alt="Platzhalterbild"
                     />
                     {% endif %}
@@ -101,13 +115,21 @@
               <div class="helper-card_detail">
                 <div class="helper-photo">
                   {% if helper.photo_path %}
-                  <img
-                    src="{{ url_for('static', path=helper.photo_path) }}"
-                    alt="{{ helper.first_name }} {{ helper.last_name }}"
-                  />
+                  <picture>
+                    <source srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.webp').replace('.jpeg', '-thumb-detail.webp').replace('.png', '-thumb-detail.webp')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.webp').replace('.jpeg', '-thumb-detail-2x.webp').replace('.png', '-thumb-detail-2x.webp')) }} 2x" type="image/webp">
+                    <source srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.avif').replace('.jpeg', '-thumb-detail.avif').replace('.png', '-thumb-detail.avif')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.avif').replace('.jpeg', '-thumb-detail-2x.avif').replace('.png', '-thumb-detail-2x.avif')) }} 2x" type="image/avif">
+                    <img src="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.jpg').replace('.jpeg', '-thumb-detail.jpg').replace('.png', '-thumb-detail.jpg')) }}"
+                         srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.jpg').replace('.jpeg', '-thumb-detail.jpg').replace('.png', '-thumb-detail.jpg')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.jpg').replace('.jpeg', '-thumb-detail-2x.jpg').replace('.png', '-thumb-detail-2x.jpg')) }} 2x"
+                         sizes="165px"
+                         width="165" height="165"
+                         loading="lazy" decoding="async"
+                         alt="{{ helper.first_name }} {{ helper.last_name }}" />
+                    </picture>
                   {% else %}
                   <img
                     src="{{ url_for('static', path='placeholder-photo.svg') }}"
+                    width="165" height="165"
+                    loading="lazy" decoding="async"
                     alt="Platzhalterbild"
                   />
                   {% endif %}
@@ -157,13 +179,21 @@
               <div class="helper-card_detail">
                 <div class="helper-photo">
                   {% if helper.photo_path %}
-                  <img
-                    src="{{ url_for('static', path=helper.photo_path) }}"
-                    alt="{{ helper.first_name }} {{ helper.last_name }}"
-                  />
+                  <picture>
+                    <source srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.webp').replace('.jpeg', '-thumb-detail.webp').replace('.png', '-thumb-detail.webp')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.webp').replace('.jpeg', '-thumb-detail-2x.webp').replace('.png', '-thumb-detail-2x.webp')) }} 2x" type="image/webp">
+                    <source srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.avif').replace('.jpeg', '-thumb-detail.avif').replace('.png', '-thumb-detail.avif')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.avif').replace('.jpeg', '-thumb-detail-2x.avif').replace('.png', '-thumb-detail-2x.avif')) }} 2x" type="image/avif">
+                    <img src="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.jpg').replace('.jpeg', '-thumb-detail.jpg').replace('.png', '-thumb-detail.jpg')) }}"
+                         srcset="{{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail.jpg').replace('.jpeg', '-thumb-detail.jpg').replace('.png', '-thumb-detail.jpg')) }} 1x, {{ url_for('static', path=helper.photo_path.replace('.jpg', '-thumb-detail-2x.jpg').replace('.jpeg', '-thumb-detail-2x.jpg').replace('.png', '-thumb-detail-2x.jpg')) }} 2x"
+                         sizes="165px"
+                         width="165" height="165"
+                         loading="lazy" decoding="async"
+                         alt="{{ helper.first_name }} {{ helper.last_name }}" />
+                    </picture>
                   {% else %}
                   <img
                     src="{{ url_for('static', path='placeholder-photo.svg') }}"
+                    width="165" height="165"
+                    loading="lazy" decoding="async"
                     alt="Platzhalterbild"
                   />
                   {% endif %}
@@ -269,8 +299,11 @@
   });
 </script>
 
-{% if detail_groups %} {% set pages_list = ["/"] %} {% for g in detail_groups %}
-{% do pages_list.append("/group/" + g.id|string) %} {% endfor %}
+{% if detail_groups %} 
+  {% set pages_list = ["/"] %} 
+  {% for g in detail_groups %}
+    {% do pages_list.append("/group/" + g.id|string) %} 
+  {% endfor %}
 <script>
   const pages = {{ pages_list | tojson | safe }};
   let currentIndex = pages.indexOf(window.location.pathname);
