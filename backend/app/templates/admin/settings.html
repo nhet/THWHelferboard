@@ -40,4 +40,24 @@
     </li>
   {% endfor %}
 </ul>
+<hr/
+<h3>Daten-Management</h3>
+<div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+  <h4>Export</h4>
+  <p>Exportieren Sie alle Daten (Datenbank + Uploads) als ZIP-Datei:</p>
+  <form method="post" action="/admin/settings/export" style="display:inline;">
+    <button class="btn" type="submit">📥 Daten exportieren</button>
+  </form>
+
+  <h4 style="margin-top: 30px;">Import</h4>
+  <p>Importieren Sie eine zuvor exportierte ZIP-Datei:</p>
+  <form method="post" action="/admin/settings/import" enctype="multipart/form-data">
+    <input type="file" name="backup_file" accept=".zip" required>
+    <button class="btn" type="submit">📤 Daten importieren</button>
+  </form>
+  <p style="color: #666; font-size: 0.9em; margin-top: 10px;">
+    <strong>Hinweis:</strong> Der Import überschreibt Ihre aktuellen Daten. 
+    Stellen Sie sicher, dass Sie vorher ein Backup exportieren.
+  </p>
+</div>
 {% endblock %}

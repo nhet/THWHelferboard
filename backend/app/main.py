@@ -12,7 +12,7 @@ import csv
 import io
 
 from fastapi import FastAPI, Request, Depends, Form, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import Response
 from starlette.middleware.gzip import GZipMiddleware
@@ -295,6 +295,138 @@ async def delete_carousel(img_id: int, db: Session = Depends(get_db)):
         set_last_update(db)
         db.commit()
     return RedirectResponse(url="/admin/settings", status_code=HTTP_303_SEE_OTHER)
+
+# ---------- Export/Import Endpoints ----------
+@app.post("/admin/settings/export")
+async def export_data(db: Session = Depends(get_db)):
+    """Export all data (database + uploads) as ZIP file"""
+    try:
+        # Create ZIP file in memory
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Add database file
+            db_path = BASE_DIR.parent / "db" / "app.db"
+            if db_path.exists():
+                zipf.write(db_path, arcname="db/app.db")
+            
+            # Add uploads directory
+            uploads_src = static_dir / "uploads"
+            if uploads_src.exists():
+                for root, dirs, files in os.walk(uploads_src):
+                    for file in files:
+                        file_path = Path(root) / file
+                        arcname = file_path.relative_to(static_dir)
+                        zipf.write(file_path, arcname)
+        
+        # Seek to the beginning of the buffer
+        zip_buffer.seek(0)
+        
+        # Return ZIP file as response
+        return StreamingResponse(
+            iter([zip_buffer.getvalue()]),
+            media_type="application/zip",
+            headers={"Content-Disposition": "attachment; filename=helferboard_backup.zip"}
+        )
+    except Exception as e:
+        print(f"Error exporting data: {e}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+@app.post("/admin/settings/import")
+async def import_data(backup_file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Import data from ZIP backup file"""
+
+     # Validate file extension
+    if not backup_file.filename.endswith('.zip'):
+        raise HTTPException(status_code=400, detail="Only ZIP files are allowed")
+        
+    try:
+        # Create temporary directory for extraction
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            zip_path = tmpdir_path / "backup.zip"
+            db_file = tmpdir_path / "db" / "app.db"
+            uploads_src = tmpdir_path / "uploads"
+            
+            db_current_path = BASE_DIR.parent / "db" / "app.db"
+            db_backup_path = BASE_DIR.parent / "db" / "app.db.backup"
+            
+            uploads_current_path = static_dir / "uploads"
+            uploads_backup_path = static_dir / "uploads.backup"       
+        
+
+            # Save uploaded file
+            content = await backup_file.read()
+            with open(zip_path, 'wb') as f:
+                f.write(content)
+            
+            # Extract and validate ZIP
+            try:
+                with zipfile.ZipFile(zip_path, 'r') as zipf:
+                    zipf.extractall(tmpdir_path)
+            except zipfile.BadZipFile:
+                raise HTTPException(status_code=400, detail="Invalid ZIP file")
+            
+            # Validate required files
+            if not db_file.exists():
+                raise HTTPException(status_code=400, detail="db/app.db not found in backup")
+            
+            # Backup current database and uploads
+            if db_current_path.exists():
+                shutil.copy(db_current_path, db_backup_path)
+            
+            if uploads_current_path.exists():
+                if uploads_backup_path.exists():
+                    shutil.rmtree(uploads_backup_path)
+                shutil.copytree(uploads_current_path, uploads_backup_path)
+            else:
+                # Create empty backup path if uploads doesn't exist
+                uploads_backup_path.mkdir(parents=True, exist_ok=True)
+            
+            try:
+                # Close current database connection
+                db.close()
+                
+                # Replace database file
+                if db_file.exists():
+                    shutil.copy(db_file, db_current_path)
+                
+                # Replace uploads
+                if uploads_src.exists():
+                    if uploads_current_path.exists():
+                        shutil.rmtree(uploads_current_path)
+                    else:
+                        print("No existing uploads directory, skipping backup")
+                    shutil.copytree(uploads_src, uploads_current_path)
+                else:
+                    print("No uploads directory in backup, skipping restore of uploads")
+                
+            except Exception as e:
+                # Restore from backup on error
+                print(f"Error during import, restoring backup: {e}")
+                if db_backup_path.exists():
+                    shutil.copy(db_backup_path, db_current_path)
+                if uploads_backup_path.exists():
+                    if uploads_current_path.exists():
+                        shutil.rmtree(uploads_current_path)
+                    shutil.copytree(uploads_backup_path, uploads_current_path)
+                raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error importing data: {e}")
+        raise HTTPException(status_code=500, detail=f"Import failed: {str(e)}")
+    
+    # Delete backup files since import was successful
+    if db_backup_path.exists():
+        db_backup_path.unlink()
+    if uploads_backup_path.exists():
+        shutil.rmtree(uploads_backup_path)
+
+    print("✅ Import successful")
+    return RedirectResponse(url="/admin/settings", status_code=HTTP_303_SEE_OTHER)     
+
 
 def restart_backend(backend_dir):
         import time
