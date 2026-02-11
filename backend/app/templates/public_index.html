@@ -132,9 +132,10 @@
     const state = {
       pos: 0,
       direction: 1, // 1 forward, -1 backward
-      pxPerMs: 0.06,
+      pxPerMs: 0.03,
       paused: false,
       lastTime: performance.now(),
+      lastUpdate: 0,
       rafId: null,
       reachedEndCount: 0, // Track how many sliders reached their max
       maxOffsetsReached: new Set() // Track which sliders have reached their end
@@ -142,6 +143,13 @@
 
     function step(now) {
       if (state.paused) return;
+
+      // Throttle to ~30fps to reduce CPU usage on Raspberry Pi
+      if (now - state.lastUpdate < 33) {
+        state.rafId = requestAnimationFrame(step);
+        return;
+      }
+      state.lastUpdate = now;
 
       const dt = now - state.lastTime;
       state.lastTime = now;
