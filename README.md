@@ -2,18 +2,17 @@
 # THWHelferboard
 Small webapp to display a organism
 
-## Description
-
-THWHelferboard is a web-based application that provides an organism information display. 
-It consists of a Python backend and a HTML/JavaScript frontend.
-
-This work is licensed under a [GNU Affero General Public License 3.0 (AGPL)][license] License.
-See [license][license_md] for more information.
-
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Total downloads](https://img.shields.io/github/downloads/nhet/THWHelferboard/total.svg)](https://github.com/nhet/THWHelferboard/releases/)
 [![GitHub release](https://img.shields.io/github/release/nhet/THWHelferboard.svg)](https://github.com/nhet/THWHelferboard/releases/)
-[![GitHub forks](https://img.shields.io/github/forks/nhet/THWHelferboard.svg?style=social&label=Fork&maxAge=2592000)](https://github.com/nhet/THWHelferboard/network/)
+[![GitHub forks](https://img.shields.io/github/forks/nhet/THWHelferboard.svg?style=social&label=Fork&maxAge=2592000)](https://github.com/nhet/THWHelferboard/forks/)
 [![GitHub stars](https://img.shields.io/github/stars/nhet/THWHelferboard.svg?style=social&label=Star&maxAge=2592000)](https://github.com/nhet/THWHelferboard/stargazers/)
+
+## Description
+
+THWHelferboard is a web-based application that provides an organism information display. It consists of a Python backend and a HTML/JavaScript frontend.
+
+This work is licensed under **GNU AGPLv3**. See [LICENSE](./LICENSE) for more information.
 
 ## Features
  - Configure 
@@ -66,8 +65,8 @@ docker run -d -p 8080:80 --name helferboard-app -v helferboard-db:/app/db -v hel
 ```
 
 ### Open in browser
-- Admin page: `<IP>:<PORT>/admin`
-- Public page page: `<IP>:<PORT>/`
+- Admin page: `http://<IP>:<PORT>/admin`
+- Public page: `http://<IP>:<PORT>/`
 
 ### Version Information
 The current version is displayed on the admin page at `/admin`.
