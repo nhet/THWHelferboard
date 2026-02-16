@@ -1,6 +1,6 @@
 
 # THWHelferboard
-Small webapp to display a organism
+Small webapp to display a organizational chart.
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Total downloads](https://img.shields.io/github/downloads/nhet/THWHelferboard/total.svg)](https://github.com/nhet/THWHelferboard/releases/)
@@ -10,7 +10,7 @@ Small webapp to display a organism
 
 ## Description
 
-THWHelferboard is a web-based application that provides an organism information display. It consists of a Python backend and a HTML/JavaScript frontend.
+THWHelferboard is a web-based application that provides an organizational chart display. It consists of a Python backend and a HTML/JavaScript frontend.
 
 This work is licensed under **GNU AGPLv3**. See [LICENSE](./LICENSE) for more information.
 
