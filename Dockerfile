@@ -23,6 +23,11 @@ VOLUME /app/app/static/uploads
 # Expose port 80 for the application
 EXPOSE 80
 
-# The command to run the Uvicorn server for the FastAPI application.
-# It will listen on all interfaces on port 80.
+# copy entrypoint script and make executable
+COPY ./backend/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# use entrypoint so migrations run before app starts
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# default command launches Uvicorn server
 CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "80"]
